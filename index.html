@@ -57,9 +57,15 @@ button:disabled { opacity: .45; cursor: default; }
 .chip.new { color: var(--amber); border-color: var(--amber); }
 
 .levels { display: flex; gap: 6px; flex-wrap: wrap; }
-.lv { font-family: var(--display); font-size: 20px; min-width: 44px; height: 44px; padding: 0 8px; background: var(--panel); color: var(--dim); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; line-height: 1; }
+.lv { font-family: var(--display); font-size: 20px; min-width: 42px; height: 42px; padding: 0 8px; background: var(--panel); color: var(--dim); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; line-height: 1; }
 .lv .st { display: block; font-size: 13px; color: var(--amber); letter-spacing: 1px; min-height: 13px; }
 .lv[aria-current="true"] { color: var(--robot); border-color: var(--robot); }
+.levels { flex-direction: column; gap: 8px; }
+.lvgroup { display: flex; flex-direction: column; gap: 4px; }
+.lvname { font-family: var(--display); font-size: 16px; letter-spacing: .1em; color: var(--dim); }
+.lvbtns { display: flex; gap: 6px; flex-wrap: wrap; }
+.tip { outline: 3px solid var(--amber) !important; outline-offset: 3px; animation: tipblink 1s steps(2) infinite; }
+@keyframes tipblink { 50% { outline-color: transparent; } }
 
 .screen { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 10px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .goalbox { align-self: stretch; display: flex; justify-content: space-between; align-items: end; gap: 10px; flex-wrap: wrap; }
@@ -67,7 +73,7 @@ button:disabled { opacity: .45; cursor: default; }
 .goal .k { display: block; font-size: 16px; color: var(--dim); letter-spacing: .1em; }
 .goal .v { font-size: 46px; line-height: .9; color: var(--robot); text-shadow: 0 0 10px var(--robot-soft); font-variant-numeric: tabular-nums; }
 .goal .v sub { font-size: 22px; }
-.goal .now { font-size: 20px; color: var(--dim); }
+.goal .now { font-size: 24px; color: var(--dim); }
 .stream { display: flex; gap: 6px; font-family: var(--display); font-size: 18px; color: var(--dim); flex-wrap: wrap; }
 .stream span { border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; }
 .stream .done { color: var(--robot); border-color: var(--robot); }
@@ -160,7 +166,7 @@ details.legend summary { font-family: var(--display); font-size: 20px; cursor: p
 
   <div class="notes">
     <h2>HINWEISE</h2>
-    <p>„Hilfe“ blendet Wertigkeiten und aktuelle Werte ein und kostet einen Stern, außer in Lern-Leveln. Der Bestwert kommt aus einem Löser im Hintergrund. Bei Zuglimit und Boss-Leveln ist das Limit Bestwert + 1.</p>
+    <p>Im Tutorial stehen die Werte über den LEDs und der IST-Wert neben dem Ziel, danach nicht mehr. Jedes Level hat ein Zuglimit und einen Bestwert aus dem Löser: Tutorial Bestwert + 3, normal + 2, Boss + 1. Sterne: Bestwert = 3, einer mehr = 2, sonst 1. „Tipp“ zeigt den nächsten sinnvollen Zug und kostet einen Stern, im Tutorial nicht. Tutorials geben keine Sterne, nur einen Haken.</p>
   </div>
 </div>
 
@@ -197,7 +203,7 @@ const LEGEND = [
   ["Stromausfall", "LEDs leuchten nur kurz nach dem Antippen."],
   ["Umrechnen", "Das Ziel steht in einem anderen Zahlensystem."],
   ["Datenstrom", "Mehrere Ziele nacheinander, der Zustand bleibt stehen."],
-  ["Zuglimit", "Nur begrenzt viele Züge."],
+  ["Zuglimit", "Gilt in jedem Level. Im Boss knapp: Bestwert + 1."],
   ["Scroll", "PIXA: schiebt das ganze Bild eine Zeile nach unten."],
   ["Invertierer (global)", "PIXA, CHROMA: kippt die ganze Platine – Negativ bzw. Komplementärfarbe."],
   ["Shift", "ASKI: kippt in allen Zeilen die 32 (groß ↔ klein)."],
@@ -207,22 +213,53 @@ const LEGEND = [
 
 const LEVELS = {
   bin: [
-    { title: "Erste Bits", w: 4, start: [0], targets: [[5]], free: true, neu: ["Wertigkeiten"],
-      say: "BYTE: JEDE LED HAT EINEN WERT: 8, 4, 2, 1. ZÄHL DIE LEUCHTENDEN ZUSAMMEN." },
-    { title: "Knapp", w: 5, start: [0], targets: [[21]], limit: "auto", neu: ["Zuglimit"],
-      say: "BYTE: DIESMAL ZÄHLT JEDER ZUG. MEHR ALS NÖTIG GEHT NICHT." },
-    { title: "Kette", w: 5, cells: [".k..."], start: [0], targets: [[29]], neu: ["Gekoppelt"],
-      say: "BYTE: DIE GEKOPPELTE LED SCHALTET IHRE NACHBARN MIT. DAS MACHT MICH NERVÖS." },
-    { title: "Datenstrom", w: 5, cells: ["..k.."], start: [0], targets: [[14], [11], [31]], limit: "auto", boss: true, neu: ["Datenstrom", "Boss"], dabei: ["Gekoppelt"],
+    { world: "TUTORIAL", title: "Die Eins", w: 4, start: [0], targets: [[1]], free: true, neu: ["Wertigkeiten"],
+      say: "BYTE: … E … ENERGIE … NIEDRIG. JEDE LED HAT EINEN WERT. TIPPE DIE 1." },
+    { world: "TUTORIAL", title: "Die Vier", w: 4, start: [0], targets: [[4]], free: true,
+      say: "BYTE: DIE ZAHLEN ÜBER DEN LEDS SIND IHRE WERTE: 8, 4, 2, 1. JETZT DIE 4." },
+    { world: "TUTORIAL", title: "Zusammenzählen", w: 4, start: [0], targets: [[5]], free: true, repairs: "Kern",
+      say: "BYTE: 5 GIBT ES NICHT ALS LED. ABER 4 + 1 = 5. ZÄHL DIE LEUCHTENDEN ZUSAMMEN." },
+    { world: "TUTORIAL", title: "Neun", w: 4, start: [0], targets: [[9]], free: true,
+      say: "BYTE: KERN STABIL! ICH SPÜRE STROM. JETZT MEINE SENSOREN: 9." },
+    { world: "TUTORIAL", title: "Vierzehn", w: 4, start: [0], targets: [[14]], free: true, repairs: "Sensoren",
+      say: "BYTE: DREI LEDS FÜR EINE ZAHL. NEBEN DEM ZIEL SIEHST DU, WO DU GERADE STEHST." },
+    { world: "TUTORIAL", title: "Ausschalten", w: 4, start: [15], targets: [[6]], free: true,
+      say: "BYTE: ICH KANN SEHEN! ALLES LEUCHTET ZU VIEL. MANCHMAL MUSS MAN LEDS AUSSCHALTEN." },
+    { world: "TUTORIAL", title: "Wenige Züge", w: 4, start: [5], targets: [[10]], free: true,
+      say: "BYTE: OBEN STEHT DER BESTWERT. SCHAFFST DU ES IN SO WENIGEN ZÜGEN?" },
+    { world: "TUTORIAL", title: "Fünf LEDs", w: 5, start: [0], targets: [[19]], free: true, repairs: "Motoren",
+      say: "BYTE: JETZT DIE MOTOREN. EINE LED MEHR, SIE IST 16 WERT." },
+    { world: "TUTORIAL", title: "Umbauen", w: 5, start: [21], targets: [[11]], free: true,
+      say: "BYTE: ICH KANN LAUFEN! *KLONK* … FAST. VON 21 AUF 11." },
+    { world: "TUTORIAL", title: "Knapp", w: 5, start: [0], targets: [[27]], free: true, limit: "tight", repairs: "Prozessor",
+      say: "BYTE: MEIN PROZESSOR. DIESMAL GIBT ES KEINEN ZUG ZU VIEL. DANACH BIN ICH WIEDER GANZ ICH." },
+
+    { world: "SCHALTRING I", title: "Kette", w: 5, cells: [".k..."], start: [0], targets: [[29]], neu: ["Gekoppelt"],
+      say: "BYTE: DER TAKTGEBER. DIE ZAHLEN SIND WEG, JETZT MUSST DU SELBST RECHNEN. DIE GEKOPPELTE LED SCHALTET IHRE NACHBARN MIT." },
+    { world: "SCHALTRING I", title: "Rechts gekoppelt", w: 5, cells: ["...k."], start: [0], targets: [[6]],
+      say: "BYTE: GEKOPPELT AM ANDEREN ENDE. DIE NACHBARN ZÄHLEN IMMER MIT." },
+    { world: "SCHALTRING I", title: "Doppelkette", w: 6, cells: [".k..k."], start: [0], targets: [[45]],
+      say: "BYTE: ZWEI KETTEN, SECHS LEDS. DIE NEUE GANZ LINKS IST 32 WERT." },
+    { world: "SCHALTRING I", title: "Datenstrom", w: 5, cells: ["..k.."], start: [0], targets: [[14], [11], [31]], boss: true, neu: ["Datenstrom", "Boss"], dabei: ["Gekoppelt"],
       say: "BYTE: DREI ZIELE NACHEINANDER. WAS LEUCHTET, BLEIBT STEHEN." },
-    { title: "Festgerostet", w: 6, cells: [".x.1.."], start: [16], targets: [[53]], neu: ["Gesperrt", "Einweg"],
-      say: "BYTE: EIN SCHALTER IST FESTGEROSTET, EINER GEHT NUR EIN EINZIGES MAL." },
-    { title: "Umkehr", w: 6, cells: ["..i..."], start: [0], targets: [[59]], neu: ["Invertierer"],
+
+    { world: "SCHALTRING II", title: "Festgerostet", w: 6, cells: [".x...."], start: [16], targets: [[49]], neu: ["Gesperrt"],
+      say: "BYTE: EIN SCHALTER IST FESTGEROSTET. DEN BEKOMMST DU NICHT BEWEGT." },
+    { world: "SCHALTRING II", title: "Nur einmal", w: 6, cells: ["..1..."], start: [0], targets: [[13]], neu: ["Einweg"],
+      say: "BYTE: DIESER SCHALTER GEHT NUR EIN EINZIGES MAL. ÜBERLEG GUT." },
+    { world: "SCHALTRING II", title: "Rost und Einweg", w: 6, cells: [".x.1.."], start: [16], targets: [[53]],
+      say: "BYTE: BEIDES ZUSAMMEN. BITTE VORSICHTIG, ICH HABE NUR DIESE BEINE." },
+    { world: "SCHALTRING II", title: "Sicherung", w: 6, cells: ["k.x.1k"], start: [8], targets: [[42], [15]], boss: true, dabei: ["Gekoppelt", "Gesperrt", "Einweg", "Datenstrom"],
+      say: "BYTE: DIE SICHERUNG DES ZWEITEN ABSCHNITTS. ZWEI ZIELE, EIN EINWEG-SCHALTER." },
+
+    { world: "SCHALTRING III", title: "Umkehr", w: 6, cells: ["..i..."], start: [0], targets: [[59]], neu: ["Invertierer"],
       say: "BYTE: DER INVERTIERER KIPPT ALLES AUF EINMAL. MANCHMAL IST DAS DER KÜRZERE WEG." },
-    { title: "Schieben", w: 6, cells: [".....<"], start: [7], targets: [[56]], neu: ["Schieber"],
+    { world: "SCHALTRING III", title: "Schieben", w: 6, cells: [".....<"], start: [7], targets: [[56]], neu: ["Schieber"],
       say: "BYTE: DER SCHIEBER VERDOPPELT ALLES. NACH LINKS, BIS ES PASST." },
-    { title: "Schaltring", w: 6, cells: [".k.i.<"], start: [0], targets: [[12], [45]], limit: "auto", boss: true, dabei: ["Gekoppelt", "Invertierer", "Schieber", "Datenstrom"],
-      say: "BYTE: DER LETZTE ABSCHNITT DES RINGS. DAHINTER … ZAHNRÄDER?" },
+    { world: "SCHALTRING III", title: "Halbieren", w: 6, cells: [">....."], start: [48], targets: [[12]],
+      say: "BYTE: UND IN DIE ANDERE RICHTUNG: ALLES GETEILT DURCH 2." },
+    { world: "SCHALTRING III", title: "Schaltring", w: 6, cells: [".k.i.<"], start: [0], targets: [[12], [45]], boss: true, dabei: ["Gekoppelt", "Invertierer", "Schieber", "Datenstrom"],
+      say: "BYTE: DER LETZTE ABSCHNITT DES RINGS. DAHINTER … ZAHNRÄDER? DAS KANN ICH NICHT LESEN." },
   ],
   oct: [
     { title: "Achter", w: 3, start: [0, 0], targets: [[5, 7]], free: true, neu: ["Oktalziffern"],
@@ -362,8 +399,7 @@ function moveList(l) {
 
 /* Löser: kleine Platinen per Breitensuche über den ganzen Zustand,
    große (Pixel, ASCII) zeilenweise: erst Sonderknöpfe, dann jede Zeile für sich. */
-function solveFull(l) {
-  const start = advance(l, { rows: l.start.slice(), used: l.start.map(() => 0), stage: 0 });
+function solveFull(l, start) {
   const key = s => s.rows.join(",") + "|" + s.used.join(",") + "|" + s.stage;
   const moves = moveList(l), seen = new Set([key(start)]);
   let frontier = [start], d = 0;
@@ -413,11 +449,30 @@ function stageCost(l, from, to) {
   walk(from, 0);
   return best;
 }
-function solve(l) {
-  if (l.w * nrows(l) <= 15) { const r = solveFull(l); if (r != null) return r; }
-  let t = 0, from = l.start;
-  for (const to of l.targets) { t += stageCost(l, from, to); from = to; }
+const startState = l => advance(l, { rows: l.start.slice(), used: l.start.map(() => 0), stage: 0 });
+function solveFrom(l, s) {
+  if (s.stage === l.targets.length) return 0;
+  if (l.w * nrows(l) <= 15) { const r = solveFull(l, s); if (r != null) return r; }
+  let t = 0, from = s.rows;
+  for (let i = s.stage; i < l.targets.length; i++) { t += stageCost(l, from, l.targets[i]); from = l.targets[i]; }
   return t;
+}
+const solve = l => solveFrom(l, startState(l));
+/* Tipp: der erste Zug, nach dem der Rest genau einen Zug kürzer ist */
+function hintFor(l, s) {
+  const d = solveFrom(l, s);
+  for (const m of describedMoves(l)) {
+    const n = m.f(s); if (!n) continue;
+    if (solveFrom(l, n) === d - 1) return m;
+  }
+  return null;
+}
+function describedMoves(l) {
+  const mv = [];
+  for (let r = 0; r < nrows(l); r++) for (let c = 0; c < l.w; c++) if (cellOf(l, r, c) !== "x") mv.push({ id: `led-${l.sys}-${LEVELS[l.sys].indexOf(l)}-${r}-${c}`, f: s => tap(l, s, r, c) });
+  for (const g of l.globals || []) mv.push({ id: "sp-" + g, f: s => glob(l, s, g) });
+  if (l.counters) for (let r = 0; r < nrows(l); r++) mv.push({ id: `inc-${l.sys}-${LEVELS[l.sys].indexOf(l)}-${r}`, f: s => count(l, s, r) });
+  return mv;
 }
 
 /* ================= Zustand ================= */
@@ -428,7 +483,7 @@ const store = {
 let mode = store.get("tw-mode", "bin");
 if (!LEVELS[mode]) mode = "bin";
 let stars = store.get("tw-stars", {});
-let idx = 0, st, moves = 0, hist = [], help = false, usedHelp = false, best = 0, limit = null, lastStars = 0, flashUntil = 0, flashTimer = null;
+let idx = 0, st, moves = 0, hist = [], help = false, usedTip = false, tipId = null, best = 0, limit = null, lastStars = 0, flashUntil = 0, flashTimer = null;
 const bestCache = {};
 
 const lv = () => LEVELS[mode][idx];
@@ -437,11 +492,12 @@ const failed = () => !solved() && limit != null && moves >= limit;
 
 function load(i) {
   idx = i; const l = lv();
-  st = advance(l, { rows: l.start.slice(), used: l.start.map(() => 0), stage: 0 });
-  moves = 0; hist = []; help = !!l.free; usedHelp = false;
+  st = startState(l);
+  moves = 0; hist = []; help = !!l.free; usedTip = false; tipId = null;
   const key = mode + i;
   best = bestCache[key] ??= solve(l);
-  limit = l.limit === "auto" ? best + 1 : l.limit ?? null;
+  // Zuglimit immer: knapp = Bestwert, Boss +1, normal +2, Tutorial +3
+  limit = l.limit === "tight" ? best : best + (l.free ? 3 : l.boss ? 1 : 2);
   flash(1500);
 }
 function flash(ms) {
@@ -452,14 +508,15 @@ function flash(ms) {
 function act(f) {
   if (solved() || failed()) return;
   const n = f(st); if (!n) return;
-  hist.push({ st, moves }); st = n; moves++;
+  hist.push({ st, moves }); st = n; moves++; tipId = null;
   if (solved()) win();
   flash(700);
 }
 function win() {
-  let s = moves <= best ? 3 : moves <= best + 2 ? 2 : 1;
-  if (usedHelp && !lv().free) s = Math.min(s, 2);
-  stars[mode + idx] = Math.max(stars[mode + idx] || 0, s); store.set("tw-stars", stars);
+  if (lv().free) { stars[mode + idx] = "ok"; store.set("tw-stars", stars); lastStars = 0; return; }
+  let s = moves <= best ? 3 : moves <= best + 1 ? 2 : 1;
+  if (usedTip) s = Math.min(s, 2);
+  stars[mode + idx] = Math.max(+stars[mode + idx] || 0, s); store.set("tw-stars", stars);
   lastStars = s;
 }
 
@@ -484,10 +541,23 @@ function fmtNumber(l, rows, asTarget) {
 }
 const rgbCss = v => "#" + v.map(hx).join("");
 
+const MODULES = { BYTE: { E: "Kern", e: "Kern", S: "Sensoren", M: "Motoren", P: "Prozessor", p: "Prozessor" } };
+function repaired() {
+  const mods = MODULES[ROBOTS[mode].name]; if (!mods) return null;
+  const set = new Set();
+  LEVELS[mode].forEach((x, i) => { if (x.repairs && (stars[mode + i] || (i < idx))) set.add(x.repairs); });
+  if (!lv().free) Object.values(mods).forEach(m => set.add(m));
+  return { mods, set };
+}
+function dimHex(c) { const n = parseInt(c.slice(1), 16); const f = v => Math.round(7 + (v - 7) * .18); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; }
 function drawBot() {
-  const s = SPRITES[ROBOTS[mode].name], g = $("bot").getContext("2d");
+  const s = SPRITES[ROBOTS[mode].name], g = $("bot").getContext("2d"), rep = repaired();
   g.clearRect(0, 0, 20, 24);
-  s.grid.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== ".") { g.fillStyle = s.key[ch]; g.fillRect(x, y, 1, 1); } }));
+  s.grid.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    const off = rep && rep.mods[ch] && !rep.set.has(rep.mods[ch]);
+    g.fillStyle = off ? dimHex(s.key[ch]) : s.key[ch]; g.fillRect(x, y, 1, 1);
+  }));
 }
 function renderTabs() {
   const t = $("tabs"); t.textContent = "";
@@ -518,12 +588,21 @@ function render() {
   if (chips.children.length) say.append(chips);
 
   const lvs = $("levels"); lvs.textContent = "";
+  let world = null, n = 0, group = null;
   LEVELS[mode].forEach((x, i) => {
+    if (x.world !== world || !group) {
+      world = x.world; n = 0;
+      group = el("div", "lvgroup");
+      if (world) group.append(el("span", "lvname", world));
+      const bs = el("div", "lvbtns"); group.append(bs); lvs.append(group);
+    }
+    n++;
     const b = el("button", "lv"); b.id = "lv-" + mode + i;
-    b.setAttribute("aria-current", i === idx); b.setAttribute("aria-label", "Level " + (i + 1) + " " + x.title);
-    b.append(x.boss ? "B" : String(i + 1), el("span", "st", "★".repeat(stars[mode + i] || 0)));
+    b.setAttribute("aria-current", i === idx); b.setAttribute("aria-label", (world || "Level") + " " + n + " " + x.title);
+    const sv = stars[mode + i];
+    b.append(x.boss ? "B" : (x.free ? "T" : "") + n, el("span", "st", sv === "ok" ? "✓" : "★".repeat(+sv || 0)));
     b.onclick = () => load(i);
-    lvs.append(b);
+    group.lastChild.append(b);
   });
 
   const sc = $("screen"); sc.textContent = "";
@@ -535,7 +614,7 @@ function render() {
     const g = el("div", "goal"); const [txt, sub] = fmtNumber(l, tgt, true);
     g.append(el("span", "k", "ZIEL" + (l.convert ? " · DEZIMAL" : "")));
     const v = el("span", "v", txt); if (sub) v.append(el("sub", null, sub)); g.append(v);
-    if (help) { const [n, s2] = fmtNumber(l, st.rows, false); g.append(el("span", "now", "  IST " + n + s2)); }
+    if (help) { const [n, s2] = fmtNumber(l, st.rows, false); g.append(el("span", "now", "   IST " + n + s2)); }
     gb.append(g);
   } else {
     gb.append(Object.assign(el("div", "goal"), { innerHTML: `<span class="k">${l.sys === "pix" ? "ZIEL: ZAHL JE ZEILE" : l.sys === "asc" ? "ZIEL: BUCHSTABE JE ZEILE" : l.convert ? "ZIEL: NUR DER CODE" : "ZIEL: AUSSEN-RING"}</span>` }));
@@ -623,19 +702,21 @@ function render() {
 
   const bar = el("div", "bar");
   const mv = el("div", "moves");
-  mv.innerHTML = `ZÜGE ${moves}${limit != null ? `<span class="lim">/${limit}</span>` : ""} · <em>BEST ${best}</em>`;
+  mv.innerHTML = `ZÜGE ${moves}<span class="lim">/${limit}</span> · <em>BEST ${best}</em>`;
   const btns = el("div", "btns");
   const undo = el("button", "btn", "ZURÜCK"); undo.id = "undo"; undo.disabled = !hist.length || solved();
   undo.onclick = () => { const h = hist.pop(); if (h) { st = h.st; moves = h.moves; flash(700); } };
   const reset = el("button", "btn", "NEU"); reset.id = "reset"; reset.onclick = () => load(idx);
-  const hb = el("button", "btn", l.free ? "HILFE" : "HILFE −★"); hb.id = "help"; hb.setAttribute("aria-pressed", help); hb.disabled = !!l.free;
-  hb.onclick = () => { help = !help; if (help) usedHelp = true; render(); };
+  const hb = el("button", "btn", l.free ? "TIPP" : "TIPP −★"); hb.id = "tip"; hb.disabled = solved() || failed();
+  hb.onclick = () => { const h = hintFor(l, st); if (h) { tipId = h.id; if (!l.free) usedTip = true; render(); } };
   btns.append(undo, reset, hb); bar.append(mv, btns); sc.append(bar);
 
+  if (tipId) { const t = document.getElementById(tipId); if (t) t.classList.add("tip"); }
   if (solved()) {
     const d = el("div", "result");
     const msg = l.sys === "pix" ? "BILD WIEDERHERGESTELLT" : l.sys === "asc" ? "TEXT: " + l.targets.at(-1).map(chr).join("") : l.sys === "rgb" ? "FARBE GETROFFEN · " + rgbCss(st.rows) : "SCHALTKREIS GESETZT";
-    d.append(msg, el("div", "stars", "★".repeat(lastStars) + "☆".repeat(3 - lastStars)));
+    d.append(msg, l.free ? el("div", "stars", "✓") : el("div", "stars", "★".repeat(lastStars) + "☆".repeat(3 - lastStars)));
+    if (l.repairs) d.append(el("span", null, "MODUL REPARIERT: " + l.repairs.toUpperCase()));
     if (idx < LEVELS[mode].length - 1) { const n = el("button", "btn", "WEITER ▸"); n.id = "next"; n.onclick = () => load(idx + 1); d.append(n); }
     else { const ni = ORDER.indexOf(mode) + 1; if (ni < ORDER.length) { const n = el("button", "btn", ROBOTS[ORDER[ni]].name + " WECKEN ▸"); n.id = "next"; n.onclick = () => { mode = ORDER[ni]; store.set("tw-mode", mode); setColor(); load(0); }; d.append(n); } else d.append(el("span", null, "ALLE SECHS TICKEN WIEDER.")); }
     sc.append(d);
