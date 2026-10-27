@@ -124,7 +124,10 @@ button:disabled { opacity: .45; cursor: default; }
 .bar { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; align-self: stretch; }
 .moves { font-family: var(--display); font-size: 22px; font-variant-numeric: tabular-nums; }
 .moves em { font-style: normal; color: var(--amber); }
-.moves .lim { color: var(--fail); }
+.moves .lim { color: var(--dim); }
+.moves .over { color: var(--fail); }
+.result .why { font-size: 18px; color: var(--dim); }
+.btns { flex-wrap: wrap; }
 .btns { display: flex; gap: 6px; }
 .btn { font-family: var(--display); font-size: 19px; min-height: 40px; padding: 2px 10px; border-radius: 6px; background: var(--bg); color: var(--text); border: 1px solid var(--line); cursor: pointer; }
 .btn[aria-pressed="true"] { color: var(--amber); border-color: var(--amber); }
@@ -241,7 +244,7 @@ details.legend summary { font-family: var(--display); font-size: 20px; cursor: p
       </details>
       <div class="notes">
         <h2>HINWEISE</h2>
-        <p>Im Tutorial stehen die Werte über den LEDs und der IST-Wert neben dem Ziel, danach nicht mehr. Jedes Level hat ein Zuglimit und einen Bestwert aus dem Löser: Tutorial Bestwert + 3, normal + 2, Boss + 1. Sterne: Bestwert = 3, einer mehr = 2, sonst 1. „Tipp“ zeigt den nächsten sinnvollen Zug und kostet einen Stern, im Tutorial nicht. Tutorials geben keine Sterne, nur einen Haken.</p>
+        <p>Im Tutorial stehen die Werte über den LEDs und der IST-Wert neben dem Ziel, danach nicht mehr. Jedes Level hat ein Zuglimit und einen Bestwert aus dem Löser (Limit: Tutorial Bestwert + 3, normal + 2, Boss + 1). Man darf weiterspielen, wenn das Limit überschritten ist. Sterne: 3, minus 1 bei mehr Zügen als das Limit, minus 1, wenn „Tipp“ oder „IST“ benutzt wurde, mindestens 1. Tutorials geben keine Sterne, nur einen Haken.</p>
       </div>
     </aside>
   </div>
@@ -277,7 +280,7 @@ const LEGEND = [
   ["Spiegel", "Das Ziel wird rückwärts gelesen, das höchste Bit steht rechts."],
   ["Umrechnen", "Das Ziel steht in einem anderen Zahlensystem."],
   ["Datenstrom", "Mehrere Ziele nacheinander, der Zustand bleibt stehen."],
-  ["Zuglimit", "Gilt in jedem Level. Im Boss knapp: Bestwert + 1."],
+  ["Zuglimit", "Gilt in jedem Level. Wer mehr Züge braucht, verliert einen Stern."],
   ["Shift", "ASKI: kippt in allen Zeilen die 32 (groß ↔ klein)."],
   ["Zähler +1", "ASKI: zählt eine Zeile um 1 hoch, mit Übertrag."],
   ["Dimmer", "CHROMA: halbiert alle drei Farbkanäle."],
@@ -556,17 +559,18 @@ const store = {
 let mode = store.get("tw-mode", "bin");
 if (!LEVELS[mode]) mode = "bin";
 let stars = store.get("tw-stars", {});
-let idx = 0, st, moves = 0, hist = [], help = false, usedTip = false, tipId = null, best = 0, limit = null, lastStars = 0, flashUntil = 0, flashTimer = null;
+let idx = 0, st, moves = 0, hist = [], help = false, showIst = false, usedHelp = false, tipId = null, best = 0, limit = null, lastStars = 0, flashUntil = 0, flashTimer = null;
 const bestCache = {};
 
 const lv = () => LEVELS[mode][idx];
 const solved = () => st.stage === lv().targets.length;
-const failed = () => !solved() && limit != null && moves >= limit;
+const failed = () => false;  // kein Abbruch mehr: Überschreiten kostet nur einen Stern
+const overLimit = () => moves > limit;
 
 function load(i) {
   idx = i; const l = lv();
   st = startState(l);
-  moves = 0; hist = []; help = !!l.free; usedTip = false; tipId = null;
+  moves = 0; hist = []; help = !!l.free; showIst = false; usedHelp = false; tipId = null;
   const key = mode + i;
   best = bestCache[key] ??= solve(l);
   // Zuglimit immer: knapp = Bestwert, Boss +1, normal +2, Tutorial +3
@@ -587,8 +591,8 @@ function act(f) {
 }
 function win() {
   if (lv().free) { stars[mode + idx] = "ok"; store.set("tw-stars", stars); lastStars = 0; return; }
-  let s = moves <= best ? 3 : moves <= best + 1 ? 2 : 1;
-  if (usedTip) s = Math.min(s, 2);
+  // 3 Sterne, −1 bei mehr Zügen als erlaubt, −1 bei Tipp oder IST-Anzeige
+  const s = Math.max(1, 3 - (overLimit() ? 1 : 0) - (usedHelp ? 1 : 0));
   stars[mode + idx] = Math.max(+stars[mode + idx] || 0, s); store.set("tw-stars", stars);
   lastStars = s;
 }
@@ -728,7 +732,7 @@ function render() {
     const g = el("div", "goal"); const [txt, sub] = fmtNumber(l, tgt, true);
     g.append(el("span", "k", "ZIEL" + (l.convert ? " · DEZIMAL" : "")));
     const v = el("span", "v", txt); if (sub) v.append(el("sub", null, sub)); g.append(v);
-    if (help) { const [n, s2] = fmtNumber(l, st.rows, false); g.append(el("span", "now", "   IST " + n + s2)); }
+    if (help || showIst) { const [n, s2] = fmtNumber(l, st.rows, false); g.append(el("span", "now", "   IST " + n + s2)); }
     gb.append(g);
   } else {
     gb.append(Object.assign(el("div", "goal"), { innerHTML: `<span class="k">${l.sys === "pix" ? "ZIEL: ZAHL JE ZEILE" : l.sys === "asc" ? "ZIEL: BUCHSTABE JE ZEILE" : l.convert ? "ZIEL: NUR DER CODE" : "ZIEL: AUSSEN-RING"}</span>` }));
@@ -756,7 +760,7 @@ function render() {
     const cap = el("div", "lampcap");
     cap.append(el("span", null, l.convert ? "ZIEL " + rgbCss(tgt) : "AUSSEN: ZIEL"), el("span", null, "INNEN: JETZT"));
     if (!l.convert && !l.free) cap.append(el("span", null, "EINE RÖHRE IST VORGEGEBEN"));
-    if (help || solved()) cap.append(el("span", null, "JETZT " + rgbCss(st.rows)), el("span", null, l.convert ? "" : "ZIEL " + rgbCss(tgt)));
+    if (help || showIst || solved()) cap.append(el("span", null, "JETZT " + rgbCss(st.rows)), el("span", null, l.convert ? "" : "ZIEL " + rgbCss(tgt)));
     sc.append(cap);
   }
 
@@ -805,7 +809,7 @@ function render() {
       tg.style.setProperty("--cc", CH[r]);
       row.append(tg);
     }
-    if (help && (l.sys === "pix" || l.sys === "asc" || l.sys === "rgb")) {
+    if ((help || showIst) && (l.sys === "pix" || l.sys === "asc" || l.sys === "rgb")) {
       const shown = l.sys === "pix" ? (l.mirror ? rev(v, l.w) : v) : v;
       row.append(el("span", "cur", l.sys === "asc" ? v + " " + chr(v) : l.sys === "rgb" ? hx(v) : String(shown)));
     }
@@ -825,20 +829,26 @@ function render() {
 
   const bar = el("div", "bar");
   const mv = el("div", "moves");
-  mv.innerHTML = `ZÜGE ${moves}<span class="lim">/${limit}</span> · <em>BEST ${best}</em>`;
+  mv.innerHTML = `ZÜGE <span class="${overLimit() ? "over" : ""}">${moves}</span><span class="lim">/${limit}</span>${overLimit() && !l.free ? ' <span class="over">−★</span>' : ""} · <em>BEST ${best}</em>`;
   const btns = el("div", "btns");
   const undo = el("button", "btn", "ZURÜCK"); undo.id = "undo"; undo.disabled = !hist.length || solved();
   undo.onclick = () => { const h = hist.pop(); if (h) { st = h.st; moves = h.moves; flash(700); } };
   const reset = el("button", "btn", "NEU"); reset.id = "reset"; reset.onclick = () => load(idx);
   const hb = el("button", "btn", l.free ? "TIPP" : "TIPP −★"); hb.id = "tip"; hb.disabled = solved() || failed();
-  hb.onclick = () => { const h = hintFor(l, st); if (h) { tipId = h.id; if (!l.free) usedTip = true; render(); } };
-  btns.append(undo, reset, hb); bar.append(mv, btns); sc.append(bar);
+  hb.onclick = () => { const h = hintFor(l, st); if (h) { tipId = h.id; if (!l.free) usedHelp = true; render(); } };
+  btns.append(undo, reset, hb);
+  if (!l.free) {
+    const ib = el("button", "btn", showIst ? "IST AN" : "IST −★"); ib.id = "ist"; ib.setAttribute("aria-pressed", showIst); ib.disabled = solved();
+    ib.onclick = () => { showIst = !showIst; if (showIst) usedHelp = true; render(); };
+    btns.append(ib);
+  } bar.append(mv, btns); sc.append(bar);
 
   if (tipId) { const t = document.getElementById(tipId); if (t) t.classList.add("tip"); }
   if (solved()) {
     const d = el("div", "result");
     const msg = l.sys === "pix" ? "BILD WIEDERHERGESTELLT" : l.sys === "asc" ? "TEXT: " + l.targets.at(-1).map(chr).join("") : l.sys === "rgb" ? "FARBE GETROFFEN · " + rgbCss(st.rows) : "SCHALTKREIS GESETZT";
     d.append(msg, l.free ? el("div", "stars", "✓") : el("div", "stars", "★".repeat(lastStars) + "☆".repeat(3 - lastStars)));
+    if (!l.free) { const why = [overLimit() && "Zuglimit überschritten", usedHelp && "Tipp oder IST benutzt"].filter(Boolean); if (why.length) d.append(el("span", "why", "−★ " + why.join(", −★ "))); }
     if (l.repairs) d.append(el("span", null, "MODUL REPARIERT: " + l.repairs.toUpperCase()));
     if (idx < LEVELS[mode].length - 1) { const n = el("button", "btn", "WEITER ▸"); n.id = "next"; n.onclick = () => load(idx + 1); d.append(n); }
     else { const ni = ORDER.indexOf(mode) + 1; if (ni < ORDER.length) { const n = el("button", "btn", ROBOTS[ORDER[ni]].name + " WECKEN ▸"); n.id = "next"; n.onclick = () => { mode = ORDER[ni]; store.set("tw-mode", mode); setColor(); load(0); }; d.append(n); } else d.append(el("span", null, "ALLE SECHS TICKEN WIEDER.")); }
