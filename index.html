@@ -244,7 +244,7 @@ details.legend summary { font-family: var(--display); font-size: 20px; cursor: p
       </details>
       <div class="notes">
         <h2>HINWEISE</h2>
-        <p>Im Tutorial stehen die Werte über den LEDs und der IST-Wert neben dem Ziel, danach nicht mehr. Jedes Level hat ein Zuglimit und einen Bestwert aus dem Löser (Limit: Tutorial Bestwert + 3, normal + 2, Boss + 1). Man darf weiterspielen, wenn das Limit überschritten ist. Sterne: 3, minus 1 bei mehr Zügen als das Limit, minus 1, wenn „Tipp“ oder „IST“ benutzt wurde, mindestens 1. Tutorials geben keine Sterne, nur einen Haken.</p>
+        <p>Im Tutorial stehen die Werte über den LEDs und der IST-Wert neben dem Ziel, danach nicht mehr. Jedes Level hat ein Zuglimit und einen Bestwert aus dem Löser (Limit: Tutorial Bestwert + 3, normal + 2, Boss + 1). Man darf weiterspielen, wenn das Limit überschritten ist. Sterne: 3, je minus 1 für mehr Züge als das Limit, für „Tipp“ und für „IST“. Es kann also auch 0 Sterne geben. Tutorials geben keine Sterne, nur einen Haken.</p>
       </div>
     </aside>
   </div>
@@ -559,7 +559,7 @@ const store = {
 let mode = store.get("tw-mode", "bin");
 if (!LEVELS[mode]) mode = "bin";
 let stars = store.get("tw-stars", {});
-let idx = 0, st, moves = 0, hist = [], help = false, showIst = false, usedHelp = false, tipId = null, best = 0, limit = null, lastStars = 0, flashUntil = 0, flashTimer = null;
+let idx = 0, st, moves = 0, hist = [], help = false, showIst = false, usedTip = false, usedIst = false, tipId = null, best = 0, limit = null, lastStars = 0, flashUntil = 0, flashTimer = null;
 const bestCache = {};
 
 const lv = () => LEVELS[mode][idx];
@@ -570,7 +570,7 @@ const overLimit = () => moves > limit;
 function load(i) {
   idx = i; const l = lv();
   st = startState(l);
-  moves = 0; hist = []; help = !!l.free; showIst = false; usedHelp = false; tipId = null;
+  moves = 0; hist = []; help = !!l.free; showIst = false; usedTip = false; usedIst = false; tipId = null;
   const key = mode + i;
   best = bestCache[key] ??= solve(l);
   // Zuglimit immer: knapp = Bestwert, Boss +1, normal +2, Tutorial +3
@@ -591,9 +591,9 @@ function act(f) {
 }
 function win() {
   if (lv().free) { stars[mode + idx] = "ok"; store.set("tw-stars", stars); lastStars = 0; return; }
-  // 3 Sterne, −1 bei mehr Zügen als erlaubt, −1 bei Tipp oder IST-Anzeige
-  const s = Math.max(1, 3 - (overLimit() ? 1 : 0) - (usedHelp ? 1 : 0));
-  stars[mode + idx] = Math.max(+stars[mode + idx] || 0, s); store.set("tw-stars", stars);
+  // 3 Sterne, je −1 für: Zuglimit überschritten, Tipp benutzt, IST angezeigt. Minimum 0.
+  const s = 3 - (overLimit() ? 1 : 0) - (usedTip ? 1 : 0) - (usedIst ? 1 : 0);
+  stars[mode + idx] = Math.max(stars[mode + idx] == null ? -1 : +stars[mode + idx] || 0, s); store.set("tw-stars", stars);
   lastStars = s;
 }
 
@@ -718,7 +718,7 @@ function render() {
     const b = el("button", "lv"); b.id = "lv-" + mode + i;
     b.setAttribute("aria-current", i === idx); b.setAttribute("aria-label", (world || "Level") + " " + n + " " + x.title);
     const sv = stars[mode + i];
-    b.append(x.boss ? "B" : (x.free ? "T" : "") + n, el("span", "st", sv === "ok" ? "✓" : "★".repeat(+sv || 0)));
+    b.append(x.boss ? "B" : (x.free ? "T" : "") + n, el("span", "st", sv === "ok" ? "✓" : sv === 0 ? "☆☆☆" : "★".repeat(+sv || 0)));
     b.onclick = () => load(i);
     group.lastChild.append(b);
   });
@@ -835,11 +835,11 @@ function render() {
   undo.onclick = () => { const h = hist.pop(); if (h) { st = h.st; moves = h.moves; flash(700); } };
   const reset = el("button", "btn", "NEU"); reset.id = "reset"; reset.onclick = () => load(idx);
   const hb = el("button", "btn", l.free ? "TIPP" : "TIPP −★"); hb.id = "tip"; hb.disabled = solved() || failed();
-  hb.onclick = () => { const h = hintFor(l, st); if (h) { tipId = h.id; if (!l.free) usedHelp = true; render(); } };
+  hb.onclick = () => { const h = hintFor(l, st); if (h) { tipId = h.id; if (!l.free) usedTip = true; render(); } };
   btns.append(undo, reset, hb);
   if (!l.free) {
     const ib = el("button", "btn", showIst ? "IST AN" : "IST −★"); ib.id = "ist"; ib.setAttribute("aria-pressed", showIst); ib.disabled = solved();
-    ib.onclick = () => { showIst = !showIst; if (showIst) usedHelp = true; render(); };
+    ib.onclick = () => { showIst = !showIst; if (showIst) usedIst = true; render(); };
     btns.append(ib);
   } bar.append(mv, btns); sc.append(bar);
 
@@ -848,7 +848,7 @@ function render() {
     const d = el("div", "result");
     const msg = l.sys === "pix" ? "BILD WIEDERHERGESTELLT" : l.sys === "asc" ? "TEXT: " + l.targets.at(-1).map(chr).join("") : l.sys === "rgb" ? "FARBE GETROFFEN · " + rgbCss(st.rows) : "SCHALTKREIS GESETZT";
     d.append(msg, l.free ? el("div", "stars", "✓") : el("div", "stars", "★".repeat(lastStars) + "☆".repeat(3 - lastStars)));
-    if (!l.free) { const why = [overLimit() && "Zuglimit überschritten", usedHelp && "Tipp oder IST benutzt"].filter(Boolean); if (why.length) d.append(el("span", "why", "−★ " + why.join(", −★ "))); }
+    if (!l.free) { const why = [overLimit() && "Zuglimit überschritten", usedTip && "Tipp benutzt", usedIst && "IST angezeigt"].filter(Boolean); if (why.length) d.append(el("span", "why", "−★ " + why.join(" · −★ "))); }
     if (l.repairs) d.append(el("span", null, "MODUL REPARIERT: " + l.repairs.toUpperCase()));
     if (idx < LEVELS[mode].length - 1) { const n = el("button", "btn", "WEITER ▸"); n.id = "next"; n.onclick = () => load(idx + 1); d.append(n); }
     else { const ni = ORDER.indexOf(mode) + 1; if (ni < ORDER.length) { const n = el("button", "btn", ROBOTS[ORDER[ni]].name + " WECKEN ▸"); n.id = "next"; n.onclick = () => { mode = ORDER[ni]; store.set("tw-mode", mode); setColor(); load(0); }; d.append(n); } else d.append(el("span", null, "ALLE SECHS TICKEN WIEDER.")); }
