@@ -161,6 +161,9 @@ details.legend summary { font-family: var(--display); font-size: 20px; cursor: p
 .notes p { margin: 0; }
 
 
+.tgv { font-family: var(--display); font-size: 24px; min-width: 40px; height: 34px; display: grid; place-items: center; border: 1px solid var(--cc); color: var(--cc); border-radius: 6px; flex: none; margin-left: 4px; }
+.tgv.unk { border-style: dashed; color: var(--dim); border-color: var(--line); }
+.tgv.ok { background: color-mix(in srgb, var(--cc) 22%, transparent); }
 /* Sonder-LEDs deutlich kennzeichnen */
 .cell { display: flex; flex-direction: column; align-items: center; gap: 2px; width: var(--led); flex: none; position: relative; }
 .row:has(.cell) { align-items: flex-start; }
@@ -278,6 +281,7 @@ const LEGEND = [
   ["Shift", "ASKI: kippt in allen Zeilen die 32 (groß ↔ klein)."],
   ["Zähler +1", "ASKI: zählt eine Zeile um 1 hoch, mit Übertrag."],
   ["Dimmer", "CHROMA: halbiert alle drei Farbkanäle."],
+  ["Vorgabe", "CHROMA: rechts neben einer Röhre steht ihr Zielwert als Richtung, die anderen beiden sind „?“."],
 ];
 
 const LEVELS = {
@@ -609,6 +613,13 @@ function fmtNumber(l, rows, asTarget) {
   return [n.toString(16).toUpperCase().padStart(l.sys === "hex" ? nrows(l) : 1, "0"), SUB[16]];
 }
 const rgbCss = v => "#" + v.map(hx).join("");
+/* CHROMA: eine Röhre wird als Richtung vorgegeben – bevorzugt ein Zwischenwert (nicht 0, nicht F),
+   weil man die nach Augenmaß am schwersten trifft; sonst die hellste. Per Level überschreibbar mit "given". */
+function givenRow(l, t) {
+  if (l.given != null) return l.given;
+  const mid = t.map((v, r) => [Math.abs(v - 7.5), r, v]).filter(([, , v]) => v > 0 && v < 15).sort((a, b) => a[0] - b[0]);
+  return mid.length ? mid[0][1] : t.indexOf(Math.max(...t));
+}
 
 const MODULES = { BYTE: { E: "Kern", e: "Kern", S: "Sensoren", M: "Motoren", P: "Prozessor", p: "Prozessor" } };
 function repaired() {
@@ -744,6 +755,7 @@ function render() {
     sc.append(lamp);
     const cap = el("div", "lampcap");
     cap.append(el("span", null, l.convert ? "ZIEL " + rgbCss(tgt) : "AUSSEN: ZIEL"), el("span", null, "INNEN: JETZT"));
+    if (!l.convert && !l.free) cap.append(el("span", null, "EINE RÖHRE IST VORGEGEBEN"));
     if (help || solved()) cap.append(el("span", null, "JETZT " + rgbCss(st.rows)), el("span", null, l.convert ? "" : "ZIEL " + rgbCss(tgt)));
     sc.append(cap);
   }
@@ -785,6 +797,13 @@ function render() {
       const inc = el("button", "inc", "+1"); inc.id = `inc-${mode}-${idx}-${r}`; inc.setAttribute("aria-label", "Zähler Zeile " + (r + 1));
       inc.disabled = solved() || failed();
       inc.onclick = () => act(s => count(l, s, r)); row.append(inc);
+    }
+    if (l.sys === "rgb" && !l.convert) {
+      const given = l.free || r === givenRow(l, tgt);
+      const tg = el("span", "tgv" + (given ? "" : " unk") + (given && ok ? " ok" : ""), given ? hx(tgt[r]) : "?");
+      tg.title = given ? "Zielwert dieser Röhre" : "Zielwert unbekannt";
+      tg.style.setProperty("--cc", CH[r]);
+      row.append(tg);
     }
     if (help && (l.sys === "pix" || l.sys === "asc" || l.sys === "rgb")) {
       const shown = l.sys === "pix" ? (l.mirror ? rev(v, l.w) : v) : v;
