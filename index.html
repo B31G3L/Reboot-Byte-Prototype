@@ -160,6 +160,22 @@ details.legend summary { font-family: var(--display); font-size: 20px; cursor: p
 .notes h2 { font-family: var(--display); font-weight: 400; font-size: 22px; color: var(--text); margin: 0 0 6px; letter-spacing: .05em; }
 .notes p { margin: 0; }
 
+
+/* Sonder-LEDs deutlich kennzeichnen */
+.cell { display: flex; flex-direction: column; align-items: center; gap: 2px; width: var(--led); flex: none; position: relative; }
+.row:has(.cell) { align-items: flex-start; }
+.row:has(.cell) > .led, .row:has(.cell) > .lab, .row:has(.cell) > .inc, .row:has(.cell) > .cur { margin-top: 0; }
+.clab { font-family: var(--display); font-size: 14px; line-height: 1; color: var(--amber); letter-spacing: .04em; white-space: nowrap; }
+.led.t-k, .led.t-i, .led.t-s { border: 2px solid var(--amber); }
+.led.t-x { border: 2px solid #9A6B3A; cursor: not-allowed; }
+.led.t-x::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: repeating-linear-gradient(45deg, #00000099 0 4px, transparent 4px 9px); }
+.led.t-x:not(.on) { background: #2a1d10; }
+.led.t-x:disabled { opacity: 1; }
+.led.t-x.on { filter: none; }
+.ic-inv { position: absolute; inset: 26%; display: block; border-radius: 50%; border: 2px solid var(--amber); background: linear-gradient(90deg, var(--amber) 50%, transparent 50%); }
+.led.on .ic-inv { border-color: #000a; background: linear-gradient(90deg, #000a 50%, transparent 50%); }
+.ic-sh { font-size: calc(var(--led) * .5) !important; letter-spacing: -.12em; }
+
 /* Bildschirm-Layout: links Roboter + Level, Mitte Platine, rechts Übersicht */
 .layout, .nav, .play, .side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 @media (min-width: 1000px) {
@@ -248,14 +264,15 @@ const GLOBALS = {
   shift:  { label: "SHIFT", hint: "groß ↔ klein" },
   dimmer: { label: "DIMMER", hint: "alle ÷ 2" },
 };
-const CELL_ICON = { i: "◐", "<": "«", ">": "»" };
+const CELL_ICON = { i: "", "<": "<<", ">": ">>" };
+const CELL_LABEL = { k: "KETTE", x: "FEST", 1: "1×", i: "INV", "<": "×2", ">": "÷2" };
 
 const LEGEND = [
-  ["Gekoppelt", "LED mit Strichen: schaltet sich und beide Nachbarn um."],
-  ["Gesperrt", "Gestrichelter Rand: nicht antippbar, ändert sich nie."],
-  ["Einweg", "Gepunkteter Rand: schaltet einmal, danach verbraucht."],
-  ["Invertierer ◐", "Kippt alle nicht gesperrten LEDs seiner Zeile."],
-  ["Schieber « »", "Schiebt die Zeile um eine Stelle (×2 / ÷2), der Rand fällt raus."],
+  ["Gekoppelt (KETTE)", "Striche zu den Nachbarn: schaltet sich und beide Nachbarn um."],
+  ["Gesperrt (FEST)", "Rostiger Rand mit Streifen: nicht antippbar, ändert sich nie."],
+  ["Einweg (1×)", "Gepunkteter Rand: schaltet einmal, danach verbraucht."],
+  ["Invertierer (INV)", "Halb gefüllter Kreis: kippt alle nicht gesperrten LEDs seiner Zeile."],
+  ["Schieber (×2 / ÷2)", "Pfeile << oder >>: schiebt die Zeile um eine Stelle, der Rand fällt raus."],
   ["Defekte LED", "Roter Rand, flackert: zeigt ihren Zustand verkehrt herum an."],
   ["Spiegel", "Das Ziel wird rückwärts gelesen, das höchste Bit steht rechts."],
   ["Stromausfall", "LEDs leuchten nur kurz nach dem Antippen."],
@@ -761,13 +778,14 @@ function render() {
       const used = t === "1" && (st.used[r] & bit);
       const b = el("button", `led t-${t === "<" || t === ">" ? "s" : t === "." ? "n" : t}` + (on ? " on" : "") + (used ? " used" : "") + (isDefect && !dark ? " defect" : ""));
       b.id = `led-${mode}-${idx}-${r}-${c}`;
-      if (CELL_ICON[t]) b.append(el("span", "ic", CELL_ICON[t]));
+      if (t in CELL_ICON) b.append(el("span", "ic ic-" + (t === "i" ? "inv" : "sh"), CELL_ICON[t]));
       const names = { k: "gekoppelt", x: "gesperrt", 1: "Einweg", i: "Invertierer", "<": "Schieber links", ">": "Schieber rechts" };
       b.setAttribute("aria-label", `Zeile ${r + 1}, LED ${c + 1}${names[t] ? ", " + names[t] : ""}${isDefect ? ", defekt" : ""}`);
       if (l.sys === "rgb") b.style.setProperty("--lc", CH[r]);
       b.disabled = t === "x" || used || solved() || failed();
       b.onclick = () => act(s => tap(l, s, r, c));
-      row.append(b);
+      if (CELL_LABEL[t]) { const w = el("span", "cell"); w.append(b, el("span", "clab", CELL_LABEL[t])); row.append(w); }
+      else row.append(b);
     }
     if (l.counters) {
       const inc = el("button", "inc", "+1"); inc.id = `inc-${mode}-${idx}-${r}`; inc.setAttribute("aria-label", "Zähler Zeile " + (r + 1));
