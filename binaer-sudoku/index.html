@@ -112,6 +112,14 @@ footer{font-size:12px;color:var(--muted);display:flex;justify-content:space-betw
 footer button{background:none;border:none;color:var(--muted);text-decoration:underline;padding:0;font-size:12px}
 
 /* ---- Reboot-BYTE-Look ---- */
+.talk{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:end}
+.talk canvas{width:64px;height:77px;image-rendering:pixelated;filter:drop-shadow(0 0 6px var(--glow))}
+.bubble{position:relative;background:var(--panel);border:1px solid var(--one);border-radius:6px;padding:8px 10px;font-family:var(--f-display);font-size:20px;line-height:1.15;min-width:0}
+.bubble::before{content:"";position:absolute;left:-7px;bottom:14px;width:12px;height:12px;background:var(--panel);border-left:1px solid var(--one);border-bottom:1px solid var(--one);transform:rotate(45deg)}
+.bubble b{color:var(--one);font-weight:400}
+
+@media (min-width:700px){.talk{grid-template-columns:96px 1fr}.talk canvas{width:96px;height:115px}.bubble{font-size:22px;padding:10px 14px}}
+
 body{font-size:14px;background-color:var(--ink);background-image:repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px), radial-gradient(var(--line) 1px, transparent 1.5px);background-size:100% 3px, 22px 22px}
 .wrap{max-width:540px;gap:14px}
 h1{font-family:var(--f-display);font-weight:400;font-size:36px;letter-spacing:.04em;color:var(--acc);text-shadow:0 0 10px #FFB00055}
@@ -183,7 +191,7 @@ footer button{font-size:16px}
   <nav class="levels" id="levels" aria-label="Level"></nav>
   <section class="card" id="card">
     <div class="lhead"><div><div class="eyebrow" id="eyebrow"></div><h2 id="title"></h2></div><div class="stat" id="stat"></div></div>
-    <div class="intro" id="intro"></div>
+    <div class="talk"><canvas id="bot" width="20" height="24" aria-hidden="true"></canvas><div class="bubble" id="intro" aria-live="polite"></div></div>
     <details class="rules"><summary>Die Regeln</summary><ul>
       <li>Jede Zelle bekommt eine 0 oder eine 1.</li>
       <li>Nie drei gleiche Ziffern direkt nebeneinander oder untereinander.</li>
@@ -335,6 +343,12 @@ const BS = (() => {
 })();
 if(typeof module!=="undefined" && typeof document==="undefined") module.exports=BS;
 
+const SPRITES = {"BYTE":{"grid":["........pppp","........pppp",".........PP",".........PP","....SSSSSSSSSSSS","....SSSSSSSSSSSS","....SSdddSSdddSS","....SSdddSSdddSS","....SSSSSSSSSSSS","....SSSddddddSSS","....SSSSSSSSSSSS","........EEEE","...EEEEEEEEEEEEEE","MMMEEEEEEEEEEEEEEMMM","MMMEEEEddddddEEEEMMM","MMMEEEEdeeeedEEEEMMM","MMMEEEEdeeeedEEEEMMM","MMMEEEEddddddEEEEMMM","MMMEEEEEEEEEEEEEEMMM","MMMEEEEEEEEEEEEEEMMM",".....MMM....MMM",".....MMM....MMM",".....MMM....MMM",".....MMM....MMM"],"key":{"E":"#3DFF7A","e":"#FFB000","S":"#3DFF7A","M":"#3DFF7A","P":"#3DFF7A","p":"#FFB000","d":"#0A120D"}},"OKTA":{"grid":[".......c.cc.c",".......cccccc",".........GG",".....GGGGGGGGGG","....GGGGGGGGGGGG","...GGGGGGGGGGGGGG","...GGddddddddddGG","...GGdeeddddeedGG","...GGGGGGGGGGGGGG","....GGGGGGGGGGGG","..GGGGGGGGGGGGGGGG","..GGdGGdGGGGdGGdGG","..J.J.J.J..J.J.J.J","..J.J.J.J..J.J.J.J",".J..J.J.J..J.J.J..J","J...J.J.J..J.J.J...J","A...A.A.A..A.A.A...A","A...A.A.A..A.A.A...A","A...k.A.k..k.A.k...A","A.....A......A.....A","k.....k......k.....k","","",""],"key":{"G":"#FF9E2C","c":"#FFE7B3","e":"#FFE7B3","J":"#FF9E2C","A":"#FF9E2C","k":"#FFE7B3","d":"#0A120D"}},"HEXA":{"grid":["...n............n","...N............N","....N..........N",".....N........N","......SSSSSSSS",".....SSSSSSSSSS","....SSddddddddSS","...SSSdeeddeedSSS","...SSSddddddddSSS","....SSdddeedddSS",".....SSSSSSSSSS","......SSSSSSSS","........SSSS","...SSSSSSSSSSSSSS","...SddddddddddddS","...SdllldlldddldS","...SSSSSSSSSSSSSS","...SddddddddddddS","...SdldllldlddldS","...SSSSSSSSSSSSSS","....SSSSSSSSSSSS","...SSdSSdSSdSSdSS","....SSSSSSSSSSSS",""],"key":{"S":"#4DE8FF","e":"#E0FCFF","l":"#FFB000","N":"#4DE8FF","n":"#E0FCFF","d":"#0A120D"}},"PIXA":{"grid":["","","..RRRRRRRRRRRRRRRR","..RddddddddddddddR","..RdddDDddddDDdddR",".RRdddDDddddDDdddRR",".RRddddddddddddddRR",".RRddDddddddddDddRR",".RRdddDDDDDDDDdddRR",".cRddddddddddddddRc","..RRRRRRRRRRRRRRRR","..RRRRRRRRRRRRRcRR",".........RR",".........RR",".........RR",".......RRRRRR","........RRRR",".......RRqqRR","........RRRR","","","","",""],"key":{"R":"#FF5CF0","c":"#4DE8FF","q":"#4DE8FF","D":"#FFD6FB","d":"#0A120D"}},"ASKI":{"grid":["..........PPPP","....TT....PtPP","...TTTT...PPPP","..TcTTcT..PPtP","..TTTTTT..PPPP","...TTTT...PtPP","....TT....PPPP","....BB....PPPP","..BBBBBBBBBBBBBBBB","..BddddddddddddddB","..BdddddlllldddddB","..BdddddlddldddddB","..BdddddlllldddddB","..BdddddlddldddddB","..BBBBBBBBBBBBBBBB",".BBBBBBBBBBBBBBBBBB",".BdBdBdBdBdBdBdBdBB",".BBdBdBdBdBdBdBdBBB",".BBBBBBBBBBBBBBBBBB","...BB..........BB","...BB..........BB","..BBB..........BBB","",""],"key":{"T":"#E8F0FF","c":"#FFB000","B":"#E8F0FF","l":"#FFB000","P":"#FFF1CC","t":"#0A120D","d":"#0A120D"}},"CHROMA":{"grid":["....r....g....b","....R....G....B","....R....G....B","....R....G....B","....R.KKKKKKKK.B","....R.KKKKKKKK.B","....R.KddddddK.B","....R.KdccccdK.B","....R.KddddddK.B","....RRKKKKKKKKBB","........KKKK",".....KKKKKKKKKK","....KKKKKKKKKKKK","....KK.KKKKKK.KK","....KK.KxyzKK.KK","....KK.KKKKKK.KK","....c..KKKKKK..c",".......KKKKKK","......KKKKKKKK",".....KKKKKKKKKK","....KKKKKKKKKKKK","......KK....KK",".....KKK....KKK",""],"key":{"R":"#FF4D4D","r":"#FFB3B3","x":"#FF4D4D","G":"#3DFF7A","g":"#B8FFCF","y":"#3DFF7A","B":"#4D8DFF","b":"#B3CCFF","z":"#4D8DFF","K":"#F2F5FA","c":"#FFFFFF","d":"#0A120D"}}};
+const ROBOTS={BYTE:"#3DFF7A",OKTA:"#FF9E2C",HEXA:"#4DE8FF",PIXA:"#FF5CF0",ASKI:"#E8F0FF",CHROMA:"#7FB2FF"};
+const BOT={1: "BYTE", 2: "BYTE", 3: "HEXA", 9: "OKTA", 4: "HEXA", 10: "BYTE", 5: "BYTE", 6: "ASKI", 7: "PIXA", 8: "CHROMA", 11: "BYTE"};
+const WIN={BYTE:"Raster stabil. Ich spüre wieder Strom.",OKTA:"Alle Zahnräder greifen. Danke.",HEXA:"Fehlerfrei dekodiert. Trivial, natürlich.",PIXA:"Ich kann wieder sehen!",ASKI:"Endlich wieder Buchstaben.",CHROMA:"Alle drei Kanäle leuchten."};
+function drawBot(cv,name){ const s=SPRITES[name], g=cv.getContext("2d"); g.clearRect(0,0,20,24);
+  s.grid.forEach((row,y)=>[...row].forEach((ch,x)=>{ if(ch==="."||!s.key[ch]) return; g.fillStyle=s.key[ch]; g.fillRect(x,y,1,1); })); }
 const META={
  1:{t:"Die drei Regeln",i:"Willkommen! Fülle das Raster mit Nullen und Einsen. Die Regeln findest du unten. Fang dort an, wo zwei gleiche Ziffern nebeneinanderstehen."},
  2:{t:"Weniger Vorgaben",i:"<b>Neu: Durchdenken.</b> Manchmal reicht ein Blick nicht. Dann spiel eine Zeile gedanklich durch: Was passiert, wenn hier eine 1 stünde?"},
@@ -368,7 +382,11 @@ function render(){
   const L=P(), m=META[L.id];
   renderLevels();
   $("eyebrow").textContent=`Level ${S.li+1} von ${LEVELS.length} · ${L.N}×${L.N}`;
-  $("title").textContent=m.t; $("intro").innerHTML=m.i;
+  $("title").textContent=m.t;
+  const bot=BOT[L.id], col=ROBOTS[bot];
+  document.documentElement.style.setProperty("--one",col); document.documentElement.style.setProperty("--glow",col+"55");
+  drawBot($("bot"),bot);
+  if(!S.tip) $("intro").innerHTML=`<b>${bot}:</b> ${m.i.replace(/<b>|<\/b>/g,"")}`;
   $("ruleExtra").hidden=!m.x; $("ruleExtra").textContent=m.x||"";
   renderBoard(); renderSecret(); renderTip();
   $("undoBtn").disabled=!S.hist.length;
@@ -432,9 +450,10 @@ function renderSecret(){
   }
 }
 function renderTip(){
-  const t=$("tip"); if(!S.tip){ t.hidden=true; return; }
-  t.hidden=false;
-  t.innerHTML=`<b>${S.tip.tech}</b><p>${S.tip.why}</p>${S.tip.set&&S.tip.set.length?`<div class="actions"><button class="btn primary" id="apply">Eintragen</button><button class="btn" id="close">Selbst machen</button></div>`:`<div class="actions"><button class="btn" id="close">Okay</button></div>`}`;
+  $("tip").hidden=true;
+  if(!S.tip) return;
+  const bot=BOT[P().id];
+  $("intro").innerHTML=`<b>${bot}: ${S.tip.tech}.</b> ${S.tip.why}${S.tip.set&&S.tip.set.length?`<div class="actions" style="margin-top:8px"><button class="btn primary" id="apply">Eintragen</button><button class="btn" id="close">Selbst machen</button></div>`:`<div class="actions" style="margin-top:8px"><button class="btn" id="close">Okay</button></div>`}`;
   if($("apply")) $("apply").onclick=()=>{ push(); for(const [r,c,v] of S.tip.set) S.g[r][c]=v; S.tip=null; S.moves++; after(); };
   $("close").onclick=()=>{ S.tip=null; render(); };
 }
@@ -466,11 +485,12 @@ function showWin(){
   progress[L.id]=Math.max(stars,progress[L.id]||0); save(); renderLevels();
   const last=S.li===LEVELS.length-1;
   const extra=L.reveal?.type==="text"?`Die Nachricht lautet <b>${L.reveal.word}</b>.`:L.reveal?.type==="image"?`Das Bild ist entschlüsselt.`:L.hints?.some(h=>h.kind==="rgb")?`Jede Zeile ist eine Farbe, siehe Palette.`:``;
-  $("won").innerHTML=`<h3>Gelöst!</h3><div class="stars">${[0,1,2].map(i=>`<span class="${i<stars?"":"off"}">★</span>`).join("")}</div>
+  const bot=BOT[L.id];
+  $("won").innerHTML=`<canvas id="wonbot" width="20" height="24" aria-hidden="true" style="width:80px;height:96px;image-rendering:pixelated;filter:drop-shadow(0 0 8px var(--glow))"></canvas><h3>Gelöst!</h3><p><b>${bot}:</b> ${WIN[bot]}</p><div class="stars">${[0,1,2].map(i=>`<span class="${i<stars?"":"off"}">★</span>`).join("")}</div>
     <ul><li class="got">★ Raster gelöst</li><li class="${!S.hinted?"got":""}">★ ohne Tipp</li><li class="${!S.violated?"got":""}">★ ohne Regelverstoß</li></ul>
     ${extra?`<p>${extra}</p>`:""}
     <div class="actions"><button class="btn" id="look">Raster ansehen</button><button class="btn" id="again">Nochmal</button>${last?"":`<button class="btn primary" id="next">Nächstes Level</button>`}</div>`;
-  $("won").hidden=false;
+  $("won").hidden=false; drawBot($("wonbot"),bot);
   $("look").onclick=()=>{ $("won").hidden=true; };
   $("again").onclick=()=>load(S.li);
   if(!last){ $("next").onclick=()=>load(S.li+1); $("next").focus(); }
