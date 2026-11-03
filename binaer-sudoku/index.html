@@ -69,6 +69,12 @@ details.rules ul{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:co
 .hint.ok{color:var(--ok)} .hint.bad{color:var(--bad)}
 .sw{width:calc(var(--cs) * .9);height:calc(var(--cs) * .9);border-radius:8px;border:1px solid var(--line);display:flex;align-items:flex-end;justify-content:center;gap:2px;padding:3px}
 .sw i{width:5px;background:rgba(255,255,255,.85);border-radius:1px;box-shadow:0 0 0 1px rgba(0,0,0,.45)}
+.bcol{display:flex;flex-direction:column;gap:6px}
+.chints{display:grid;gap:var(--gap);padding-inline:calc(var(--gap) + 1px)}
+.chint{width:var(--cs);text-align:center;font-family:var(--f-display);font-size:max(10px, calc(var(--cs) * .3));font-weight:600;color:var(--muted);line-height:1.15;word-break:break-all}
+.chint.ok{color:var(--ok)} .chint.bad{color:var(--bad)}
+.chint::before{content:"↑";display:block;font-size:10px;opacity:.6}
+.chint:empty::before{content:none}
 .tipbox{background:var(--panel2);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--acc)}
 .tipbox b{color:var(--acc);font-family:var(--f-display);font-size:13px}
 .tipbox p{margin:0;font-size:14px}
@@ -125,7 +131,7 @@ footer button{background:none;border:none;color:var(--muted);text-decoration:und
       <li>Keine zwei Zeilen sind gleich, keine zwei Spalten sind gleich.</li>
       <li id="ruleExtra" hidden></li>
     </ul></details>
-    <div class="stage"><div class="boardwrap"><div class="board" id="board"></div><div class="hints" id="hints"></div></div></div>
+    <div class="stage"><div class="boardwrap"><div class="bcol"><div class="board" id="board"></div><div class="chints" id="chints"></div></div><div class="hints" id="hints"></div></div></div>
     <div class="secret" id="secret" hidden></div>
     <div class="tipbox" id="tip" hidden></div>
     <div class="bar">
@@ -142,17 +148,21 @@ footer button{background:none;border:none;color:var(--muted);text-decoration:und
 </div>
 
 <script>
-const LEVELS=[{"id":1,"N":6,"sol":[21,37,26,19,44,42],"hints":[],"marks":[],"givens":[[1,1],[1,2],[1,3],[1,4],[2,2],[2,3],[3,2],[3,3],[3,4],[4,0],[4,4],[5,0],[5,1],[5,2],[5,4]]},{"id":2,"N":6,"sol":[50,42,13,22,41,21],"hints":[],"marks":[],"givens":[[0,2],[0,3],[1,3],[1,5],[2,2],[3,4],[4,3],[5,0]]},{"id":3,"N":6,"sol":[21,37,42,25,38,26],"hints":[{"r":1,"kind":"hex"},{"r":3,"kind":"hex"},{"r":4,"kind":"hex"}],"marks":[],"givens":[[2,2],[5,0],[5,3]]},{"id":4,"N":8,"sol":[172,75,150,108,51,201,180,83],"hints":[{"r":0,"kind":"dec"},{"r":5,"kind":"dec"},{"r":2,"kind":"hex","mask":15},{"r":3,"kind":"hex","mask":240},{"r":7,"kind":"hex","mask":15}],"marks":[],"givens":[[1,6],[2,3],[3,7]]},{"id":5,"N":8,"sol":[165,147,106,149,108,43,212,90],"hints":[],"marks":[{"a":[4,2],"b":[4,3],"eq":false},{"a":[6,3],"b":[7,3],"eq":true},{"a":[6,6],"b":[7,6],"eq":false},{"a":[0,1],"b":[1,1],"eq":true},{"a":[0,5],"b":[0,6],"eq":false},{"a":[6,4],"b":[7,4],"eq":false},{"a":[7,4],"b":[7,5],"eq":false},{"a":[6,1],"b":[7,1],"eq":true},{"a":[0,5],"b":[1,5],"eq":false},{"a":[6,2],"b":[6,3],"eq":false},{"a":[2,4],"b":[2,5],"eq":false},{"a":[2,2],"b":[3,2],"eq":false},{"a":[7,6],"b":[7,7],"eq":false},{"a":[6,0],"b":[7,0],"eq":false},{"a":[4,2],"b":[5,2],"eq":true},{"a":[5,5],"b":[5,6],"eq":false}],"givens":[[0,1],[0,5],[1,4],[2,4],[4,1],[4,7],[6,4],[7,0]]},{"id":6,"N":8,"sol":[178,169,85,106,149,77,170,86],"hints":[{"r":2,"kind":"ascii"},{"r":3,"kind":"ascii"},{"r":5,"kind":"ascii"}],"marks":[],"reveal":{"type":"text","key":[245,236,30,36,212,14,225,2],"word":"GEKNACKT"},"givens":[[0,2],[0,3],[6,7],[7,0],[7,7]]},{"id":7,"N":8,"sol":[43,201,212,54,75,165,180,90],"hints":[],"marks":[],"reveal":{"type":"image","cipher":[51,245,170,237,180,129,238,255],"img":[24,60,126,219,255,36,90,165]},"givens":[[0,1],[1,0],[1,2],[1,7],[2,1],[3,0],[4,0],[4,7],[5,2],[5,4],[5,7],[6,3],[7,2]]},{"id":8,"N":6,"sol":[22,11,52,44,19,41],"hints":[{"r":0,"kind":"rgb"},{"r":2,"kind":"rgb"},{"r":5,"kind":"rgb"}],"marks":[],"givens":[[1,0],[3,1],[3,2]]}];
+const LEVELS=[{"id":1,"N":6,"sol":[21,37,26,19,44,42],"hints":[],"marks":[],"givens":[[1,1],[1,2],[1,3],[1,4],[2,2],[2,3],[3,2],[3,3],[3,4],[4,0],[4,4],[5,0],[5,1],[5,2],[5,4]]},{"id":2,"N":6,"sol":[50,42,13,22,41,21],"hints":[],"marks":[],"givens":[[0,2],[0,3],[1,3],[1,5],[2,2],[3,4],[4,3],[5,0]]},{"id":3,"N":6,"sol":[21,37,42,25,38,26],"hints":[{"r":1,"kind":"hex"},{"r":3,"kind":"hex"},{"r":4,"kind":"hex"}],"marks":[],"givens":[[2,2],[5,0],[5,3]]},{"id":9,"N":6,"sol":[50,38,13,26,37,25],"hints":[{"r":1,"kind":"oct"},{"r":4,"kind":"oct","mask":7},{"r":2,"kind":"oct","mask":56},{"r":5,"kind":"oct"}],"marks":[],"givens":[[3,0]]},{"id":4,"N":8,"sol":[172,75,150,108,51,201,180,83],"hints":[{"r":0,"kind":"dec"},{"r":5,"kind":"dec"},{"r":2,"kind":"hex","mask":15},{"r":3,"kind":"hex","mask":240},{"r":7,"kind":"hex","mask":15}],"marks":[],"givens":[[1,6],[2,3],[3,7]]},{"id":10,"N":8,"sol":[101,166,89,83,172,153,86,170],"hints":[{"c":0,"kind":"hex"},{"c":3,"kind":"dec"},{"c":6,"kind":"hex","mask":240},{"r":4,"kind":"hex","mask":15},{"r":1,"kind":"dec"}],"marks":[],"givens":[[0,2],[3,1],[6,5],[6,6],[7,7]]},{"id":5,"N":8,"sol":[165,147,106,149,108,43,212,90],"hints":[],"marks":[{"a":[4,2],"b":[4,3],"eq":false},{"a":[6,3],"b":[7,3],"eq":true},{"a":[6,6],"b":[7,6],"eq":false},{"a":[0,1],"b":[1,1],"eq":true},{"a":[0,5],"b":[0,6],"eq":false},{"a":[6,4],"b":[7,4],"eq":false},{"a":[7,4],"b":[7,5],"eq":false},{"a":[6,1],"b":[7,1],"eq":true},{"a":[0,5],"b":[1,5],"eq":false},{"a":[6,2],"b":[6,3],"eq":false},{"a":[2,4],"b":[2,5],"eq":false},{"a":[2,2],"b":[3,2],"eq":false},{"a":[7,6],"b":[7,7],"eq":false},{"a":[6,0],"b":[7,0],"eq":false},{"a":[4,2],"b":[5,2],"eq":true},{"a":[5,5],"b":[5,6],"eq":false}],"givens":[[0,1],[0,5],[1,4],[2,4],[4,1],[4,7],[6,4],[7,0]]},{"id":6,"N":8,"sol":[178,169,85,106,149,77,170,86],"hints":[{"r":2,"kind":"ascii"},{"r":3,"kind":"ascii"},{"r":5,"kind":"ascii"}],"marks":[],"reveal":{"type":"text","key":[245,236,30,36,212,14,225,2],"word":"GEKNACKT"},"givens":[[0,2],[0,3],[6,7],[7,0],[7,7]]},{"id":7,"N":8,"sol":[43,201,212,54,75,165,180,90],"hints":[],"marks":[],"reveal":{"type":"image","cipher":[51,245,170,237,180,129,238,255],"img":[24,60,126,219,255,36,90,165]},"givens":[[0,1],[1,0],[1,2],[1,7],[2,1],[3,0],[4,0],[4,7],[5,2],[5,4],[5,7],[6,3],[7,2]]},{"id":8,"N":6,"sol":[22,11,52,44,19,41],"hints":[{"r":0,"kind":"rgb"},{"r":2,"kind":"rgb"},{"r":5,"kind":"rgb"}],"marks":[],"givens":[[1,0],[3,1],[3,2]]},{"id":11,"N":10,"sol":[211,409,812,722,425,342,620,659,301,614],"hints":[{"r":2,"kind":"dec"},{"r":7,"kind":"dec"},{"c":4,"kind":"dec"},{"c":8,"kind":"dec"}],"marks":[{"a":[2,0],"b":[3,0],"eq":true},{"a":[4,7],"b":[5,7],"eq":false},{"a":[1,7],"b":[2,7],"eq":false},{"a":[6,1],"b":[6,2],"eq":true},{"a":[1,1],"b":[2,1],"eq":true},{"a":[6,1],"b":[7,1],"eq":true},{"a":[5,7],"b":[6,7],"eq":true}],"givens":[[3,7],[3,9],[6,7]]}];
 // ===== Binär-Sudoku Engine: Regeln, menschlicher Löser, Tipps =====
 const BS = (() => {
   const bit = (v,N,c) => (v>>(N-1-c))&1;
   function lines(N){ const L=[]; for(let i=0;i<N;i++){ L.push({kind:"Zeile",i,cells:[...Array(N)].map((_,k)=>[i,k])}); L.push({kind:"Spalte",i,cells:[...Array(N)].map((_,k)=>[k,i])}); } return L; }
   const hintMask = (h,N) => h.mask==null ? (1<<N)-1 : h.mask;
+  const hCells = (h,N) => [...Array(N)].map((_,k)=> h.c!=null ? [k,h.c] : [h.r,k]);
+  const hVal = (P,h) => h.c!=null ? P.sol.reduce((v,row)=>v*2+bit(row,P.N,h.c),0) : P.sol[h.r];
+  const hName = h => h.c!=null ? `Spalte ${h.c+1}` : `Zeile ${h.r+1}`;
   function hintText(h,v,N){
     const m=hintMask(h,N);
     if(h.kind==="dec") return String(v);
     if(h.kind==="ascii") return "„"+String.fromCharCode(v)+"“";
     if(h.kind==="rgb") return "";
+    if(h.kind==="oct"){ let s=""; for(let d=Math.ceil(N/3)-1;d>=0;d--){ const nm=(m>>(d*3))&7; s+= nm===7 ? ((v>>(d*3))&7).toString(8) : "?"; } return s+"₈"; }
     const digits=Math.ceil(N/4); let s="";
     for(let d=digits-1;d>=0;d--){ const nm=(m>>(d*4))&15; s+= nm===15 || (N===6&&d===1&&nm===3) ? ((v>>(d*4))&15).toString(16).toUpperCase() : "?"; }
     return "0x"+s;
@@ -168,7 +178,7 @@ const BS = (() => {
       for(const s of [0,1]) if(v.filter(x=>x===s).length>N/2) L.cells.forEach(([r,c],k)=>{ if(v[k]===s) bad.add(r+","+c); });
     }
     for(const m of P.marks||[]){ const a=g[m.a[0]][m.a[1]], b=g[m.b[0]][m.b[1]]; if(a!=null&&b!=null&&(a===b)!==m.eq){ bad.add(m.a.join(",")); bad.add(m.b.join(",")); } }
-    for(const h of P.hints||[]){ const m=hintMask(h,N), t=P.sol[h.r]; for(let c=0;c<N;c++) if((m>>(N-1-c))&1){ const x=g[h.r][c]; if(x!=null&&x!==bit(t,N,c)) bad.add(h.r+","+c); } }
+    for(const h of P.hints||[]){ const m=hintMask(h,N), t=hVal(P,h), cl=hCells(h,N); for(let k=0;k<N;k++) if((m>>(N-1-k))&1){ const [r,c]=cl[k], x=g[r][c]; if(x!=null&&x!==bit(t,N,k)) bad.add(r+","+c); } }
     // doppelte volle Zeilen/Spalten
     for(const kind of ["Zeile","Spalte"]){ const seen={}; for(let i=0;i<N;i++){ const cells=[...Array(N)].map((_,k)=>kind==="Zeile"?[i,k]:[k,i]); const v=cells.map(([r,c])=>g[r][c]); if(v.some(x=>x==null)) continue; const k=v.join(""); if(seen[k]){ [...seen[k],...cells].forEach(x=>bad.add(x.join(","))); } else seen[k]=cells; } }
     return bad;
@@ -178,18 +188,19 @@ const BS = (() => {
   const opp=v=>1-v, nm=v=>v===1?"Eins":"Null", nmP=v=>v===1?"Einsen":"Nullen";
   function techHint(P,g){
     const N=P.N;
-    for(const h of P.hints||[]){ const m=hintMask(h,N), t=P.sol[h.r];
-      for(let c=0;c<N;c++) if(((m>>(N-1-c))&1)&&g[h.r][c]==null){
-        const set=[]; for(let k=0;k<N;k++) if(((m>>(N-1-k))&1)&&g[h.r][k]==null) set.push([h.r,k,bit(t,N,k)]);
-        const txt=h.kind==="rgb"?"Die Farbe":"Der Hinweis "+hintText(h,t,N);
-        const bits=[...Array(N)].map((_,k)=>((m>>(N-1-k))&1)?bit(t,N,k):"·").join("");
-        let why;
-        if(h.kind==="rgb") why=`Die Farbe von Zeile ${h.r+1} besteht aus drei Kanälen mit je zwei Bits: 00 = aus, 01 = schwach, 10 = mittel, 11 = voll. Rot, Grün, Blau ergeben zusammen ${bits}.`;
-        else if(h.kind==="ascii") why=`${txt} in Zeile ${h.r+1} hat den ASCII-Code ${t} = ${bits} in Binär.`;
-        else if(h.kind==="dec") why=`${txt} in Zeile ${h.r+1} ist ${bits} in Binär. Zerlege die Zahl in 32, 16, 8, 4, 2, 1.`;
-        else why=`${txt} in Zeile ${h.r+1}: Jede Hex-Ziffer steht für vier Bits. Also ${bits}.`;
-        return {set,refs:[],tech:"Hinweis übersetzen",why};
-      } }
+    for(const h of P.hints||[]){ const m=hintMask(h,N), t=hVal(P,h), cl=hCells(h,N);
+      const set=[]; for(let k=0;k<N;k++) if(((m>>(N-1-k))&1)&&g[cl[k][0]][cl[k][1]]==null) set.push([cl[k][0],cl[k][1],bit(t,N,k)]);
+      if(!set.length) continue;
+      const bits=[...Array(N)].map((_,k)=>((m>>(N-1-k))&1)?bit(t,N,k):"·").join(""), nm=hName(h), dir=h.c!=null?" (von oben nach unten gelesen)":"";
+      const txt="Der Hinweis "+hintText(h,t,N);
+      let why;
+      if(h.kind==="rgb") why=`Die Farbe von ${nm} besteht aus drei Kanälen mit je zwei Bits: 00 = aus, 01 = schwach, 10 = mittel, 11 = voll. Rot, Grün, Blau ergeben zusammen ${bits}.`;
+      else if(h.kind==="ascii") why=`${txt} in ${nm} hat den ASCII-Code ${t} = ${bits} in Binär.`;
+      else if(h.kind==="dec") why=`${txt} bei ${nm}${dir} ist ${bits} in Binär. Zerlege die Zahl in Zweierpotenzen: ${[...Array(N)].map((_,k)=>1<<(N-1-k)).join(", ")}.`;
+      else if(h.kind==="oct") why=`${txt} bei ${nm}${dir}: Jede Oktalziffer steht für drei Bits (4, 2, 1). Also ${bits}.`;
+      else why=`${txt} bei ${nm}${dir}: Jede Hex-Ziffer steht für vier Bits (8, 4, 2, 1). Also ${bits}.`;
+      return {set,refs:[],tech:"Hinweis übersetzen",why};
+    }
     return null;
   }
   function techPair(P,g){
@@ -260,7 +271,7 @@ const BS = (() => {
     }
     return {ok:false,used};
   }
-  return {bit,lines,hintText,hintMask,rgbOf,errors,deduce,startGrid,solveLogic};
+  return {bit,lines,hintText,hintMask,hCells,hVal,rgbOf,errors,deduce,startGrid,solveLogic};
 })();
 if(typeof module!=="undefined" && typeof document==="undefined") module.exports=BS;
 
@@ -272,6 +283,9 @@ const META={
  5:{t:"Gleich und verschieden",i:"<b>Neu: Zeichen.</b> Ein = zwischen zwei Zellen heißt, sie sind gleich. Ein × heißt, sie sind verschieden.",x:"= heißt gleich, × heißt verschieden."},
  6:{t:"ASCII und Geheimnachricht",i:"<b>Neu: ASCII.</b> Drei Zeilen sind als Buchstabe angegeben. Großbuchstaben beginnen mit 010, Kleinbuchstaben mit 011. Außerdem ist dein Raster der Schlüssel zu einer Geheimnachricht: Jede fertige Zeile XOR ihr Schlüsselbyte ergibt einen Buchstaben."},
  7:{t:"Das Geheimbild",i:"<b>Neu: Verschlüsseltes Bild.</b> Ein Bild wurde mit der Lösung per XOR verschlüsselt. Jede Zelle, die du füllst, entschlüsselt einen Pixel. Erkennst du das Motiv, hilft es dir sogar beim Lösen."},
+ 9:{t:"Oktal-Hinweise",i:"<b>Neu: Oktal.</b> Jede Oktalziffer steht für drei Bits mit den Werten 4, 2 und 1. Bei sechs Bits heißt 52₈ also 101 010. Ein ? bedeutet, dass diese Ziffer nicht verraten wird."},
+ 10:{t:"Spalten-Hinweise",i:"<b>Neu: Spalten.</b> Hinweise unter dem Raster gelten für die Spalte darüber. Gelesen wird von oben nach unten, die oberste Zelle ist das größte Bit."},
+ 11:{t:"Das große Finale",i:"<b>Finale: 10×10.</b> Zehn Bits pro Zeile, Dezimal-Hinweise bis 1023 an Zeilen und Spalten und ein paar Zeichen. Kein Zeitdruck, nimm dir Ruhe.",x:"= heißt gleich, × heißt verschieden."},
  8:{t:"Farbcodes",i:"<b>Neu: RGB.</b> Drei Zeilen sind als Farbe angegeben. Je zwei Bits pro Kanal, in der Reihenfolge Rot, Grün, Blau: 00 aus, 01 schwach, 10 mittel, 11 voll. Die drei Balken im Feld zeigen die Stärke der Kanäle.",x:"Farbe = RRGGBB, je zwei Bits pro Kanal."}
 };
 const $=id=>document.getElementById(id);
@@ -300,8 +314,8 @@ function render(){
   $("undoBtn").disabled=!S.hist.length;
 }
 function cellSize(L){
-  const side=(L.hints&&L.hints.length)?(L.hints.some(h=>h.kind==="rgb")?54:64):0, gap=L.N>6?5:6;
-  return {cs:`min(${L.N>6?46:56}px, calc((100cqw - ${side+gap*(L.N+1)+10}px) / ${L.N}))`,gap:gap+"px"};
+  const rh=(L.hints||[]).filter(h=>h.r!=null), side=rh.length?(rh.some(h=>h.kind==="rgb")?54:64):0, gap=L.N>8?4:L.N>6?5:6;
+  return {cs:`min(${L.N>8?40:L.N>6?46:56}px, calc((100cqw - ${side+gap*(L.N+1)+10}px) / ${L.N}))`,gap:gap+"px"};
 }
 function renderBoard(){
   const L=P(), N=L.N, g=S.g, bad=$("optErr").checked?BS.errors(L,g):new Set();
@@ -322,20 +336,24 @@ function renderBoard(){
     html+=`<span class="mark" style="left:${x};top:${y}" aria-hidden="true">${mk.eq?"=":"×"}</span>`;
   }
   bw.innerHTML=html; bw.classList.toggle("solved",S.solved);
-  // Zeilenhinweise
+  // Hinweise an Zeilen und Spalten
   const hs=L.hints||[];
-  $("hints").hidden=!hs.length;
-  if(hs.length){
+  const okOf=h=>{ const m=BS.hintMask(h,N), t=BS.hVal(L,h), cl=BS.hCells(h,N); if(!cl.every(([r,c],k)=>!((m>>(N-1-k))&1)||g[r][c]!=null)) return null; return cl.every(([r,c],k)=>!((m>>(N-1-k))&1)||g[r][c]===BS.bit(t,N,k)); };
+  const rh=hs.filter(x=>x.r!=null), ch=hs.filter(x=>x.c!=null);
+  $("hints").hidden=!rh.length;
+  if(rh.length){
     let h="";
     for(let r=0;r<N;r++){
-      const hint=hs.find(x=>x.r===r); if(!hint){ h+=`<div class="hint"></div>`; continue; }
-      const t=L.sol[r], m=BS.hintMask(hint,N), row=g[r], full=row.every(v=>v!=null);
-      let ok=null; if(row.every((v,c)=>!((m>>(N-1-c))&1)||v!=null)) ok=row.every((v,c)=>!((m>>(N-1-c))&1)||v===BS.bit(t,N,c));
+      const hint=rh.find(x=>x.r===r); if(!hint){ h+=`<div class="hint"></div>`; continue; }
+      const t=BS.hVal(L,hint), ok=okOf(hint);
       if(hint.kind==="rgb"){ const lv=[(t>>4)&3,(t>>2)&3,t&3]; h+=`<div class="hint"><span class="sw" style="background:${BS.rgbOf(t)}" title="Farbe">${lv.map(x=>`<i style="height:${4+x*5}px"></i>`).join("")}</span></div>`; }
       else h+=`<div class="hint${ok===true?" ok":ok===false?" bad":""}">${BS.hintText(hint,t,N)}</div>`;
     }
     $("hints").innerHTML=h;
   }
+  const cbox=$("chints"); cbox.hidden=!ch.length;
+  cbox.style.setProperty("--cs",cs); cbox.style.setProperty("--gap",gap); cbox.style.gridTemplateColumns=`repeat(${N},var(--cs))`;
+  if(ch.length) cbox.innerHTML=[...Array(N)].map((_,c)=>{const hint=ch.find(x=>x.c===c); if(!hint) return `<div class="chint"></div>`; const ok=okOf(hint); return `<div class="chint${ok===true?" ok":ok===false?" bad":""}">${BS.hintText(hint,BS.hVal(L,hint),N)}</div>`;}).join("");
 }
 function renderSecret(){
   const L=P(), N=L.N, g=S.g, sec=$("secret"), rv=L.reveal;
