@@ -10,6 +10,8 @@ Alles steckt in einer Datei (`index.html`), ohne Build-Schritt. Spielstand und S
 
 Zweiter Prototyp: ein Binär-Sudoku mit elf Leveln (Hex-, Oktal-, Dezimal-, ASCII- und Farbhinweise an Zeilen und Spalten, 6×6 bis 10×10, Gleich/Verschieden-Zeichen, Geheimnachricht und Geheimbild per XOR) und Tipps, die den nächsten Logikschritt erklären.
 
+Mit Werkstatt (die sechs Roboter bitten um Hilfe und wachen nach und nach auf), Sammelalbum und täglichem Rätsel nach Dienstplan.
+
 Spielen: https://b31g3l.github.io/Reboot-Byte-Prototype/binaer-sudoku/
 
 Liegt in `binaer-sudoku/index.html`, ebenfalls ohne Build-Schritt.

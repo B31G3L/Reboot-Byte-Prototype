@@ -178,6 +178,57 @@ details.rules summary{font-family:var(--f-display);font-size:19px;letter-spacing
 .won p b{color:var(--acc);font-weight:400}
 footer{font-family:var(--f-display);font-size:16px}
 footer button{font-size:16px}
+
+/* ---- Werkstatt, Album, Tagesrätsel ---- */
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tab{font-family:var(--f-display);font-size:22px;letter-spacing:.05em;background:var(--panel);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:6px 4px 4px;line-height:1}
+.tab[aria-pressed="true"]{color:var(--acc);border-color:var(--acc);box-shadow:0 0 12px #FFB00033, inset 0 0 10px #FFB00018}
+.view{display:flex;flex-direction:column;gap:12px}
+.vhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.vhead h2{font-family:var(--f-display);font-weight:400;font-size:30px;margin:0;color:var(--fg)}
+.vhead span{font-family:var(--f-display);font-size:18px;color:var(--muted)}
+.bots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.botc{--c:var(--one);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;text-align:left;min-width:0}
+.botc.open{border-color:var(--c);box-shadow:0 0 12px color-mix(in srgb,var(--c) 22%,transparent)}
+.botc .top{display:flex;gap:10px;align-items:flex-end}
+.botc canvas{width:48px;height:58px;image-rendering:pixelated;flex:none}
+.botc.open canvas{filter:drop-shadow(0 0 6px color-mix(in srgb,var(--c) 50%,transparent))}
+.botc .nm{font-family:var(--f-display);font-size:24px;line-height:1;color:var(--c)}
+.botc .sy{font-family:var(--f-display);font-size:16px;color:var(--muted)}
+.botc.sleep .nm{color:var(--muted)}
+.ask{font-family:var(--f-display);font-size:18px;line-height:1.1;color:var(--fg);min-height:40px}
+.botc.sleep .ask{color:var(--muted)}
+.lvdots{display:flex;gap:5px;flex-wrap:wrap}
+.lvdot{font-family:var(--f-display);font-size:16px;min-width:34px;height:34px;border-radius:6px;border:1px solid var(--line);background:var(--ink);color:var(--muted);padding:0 4px;line-height:1}
+.lvdot small{display:block;font-size:11px;color:var(--acc);letter-spacing:1px}
+.lvdot.next{border-color:var(--c);color:var(--c);box-shadow:0 0 8px color-mix(in srgb,var(--c) 35%,transparent)}
+.lvdot.done{color:var(--fg)}
+.lvdot:disabled{opacity:.35;cursor:default}
+.dcard{background:var(--panel);border:1px solid var(--one);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.dtop{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center}
+.dtop canvas{width:72px;height:86px;image-rendering:pixelated;filter:drop-shadow(0 0 6px var(--glow))}
+.dtop b{font-family:var(--f-display);font-weight:400;font-size:28px;color:var(--one);display:block;line-height:1}
+.dtop p{margin:4px 0 0;font-family:var(--f-display);font-size:19px;line-height:1.15}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.wd{--c:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 0;font-family:var(--f-display);font-size:15px;color:var(--muted)}
+.wd canvas{width:24px;height:29px;image-rendering:pixelated}
+.wd.today{border-color:var(--c);color:var(--c)}
+.wd.done{color:var(--fg)} .wd i{font-style:normal;color:var(--acc);font-size:13px;min-height:13px}
+.streak{font-family:var(--f-display);font-size:22px;color:var(--acc)}
+.alb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (min-width:520px){.alb{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.at{--c:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center;min-width:0}
+.at.got{border-color:color-mix(in srgb,var(--c) 60%,var(--line))}
+.at .art{display:grid;gap:1px;width:100%;aspect-ratio:1;max-width:100%}
+.at .art b{background:#0a120d;border-radius:1px}
+.at .art b.on{background:var(--c);box-shadow:0 0 4px color-mix(in srgb,var(--c) 60%,transparent)}
+.at .word{font-family:var(--f-display);font-size:16px;color:var(--c);letter-spacing:.05em;aspect-ratio:1;width:100%;display:flex;align-items:center;justify-content:center;background:#0a120d;border-radius:4px;text-align:center;line-height:1;word-break:break-all;padding:4px}
+.at .pal{display:grid;grid-template-rows:repeat(6,1fr);width:100%;aspect-ratio:1;border-radius:4px;overflow:hidden}
+.at .q{aspect-ratio:1;width:100%;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-size:34px;color:var(--line);background:#0a120d;border-radius:4px}
+.at .cap{font-family:var(--f-display);font-size:15px;line-height:1.05;text-align:center;color:var(--fg)}
+.at .cap small{display:block;color:var(--c);font-size:13px}
+.back{font-family:var(--f-display);font-size:20px;background:var(--ink);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:2px 10px;align-self:flex-start;min-height:36px}
+.lhead{align-items:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -188,9 +239,16 @@ footer button{font-size:16px}
     <h1>Bin<span class="o">ä</span>r-Sudoku</h1>
     <label class="toggle"><input type="checkbox" id="optErr" checked> Regelverstöße markieren</label>
   </header>
-  <nav class="levels" id="levels" aria-label="Level"></nav>
-  <section class="card" id="card">
-    <div class="lhead"><div><div class="eyebrow" id="eyebrow"></div><h2 id="title"></h2></div><div class="stat" id="stat"></div></div>
+  <nav class="tabs" id="tabs" aria-label="Bereiche">
+    <button class="tab" data-v="hub" aria-pressed="true">Werkstatt</button>
+    <button class="tab" data-v="daily" aria-pressed="false">Täglich</button>
+    <button class="tab" data-v="album" aria-pressed="false">Album</button>
+  </nav>
+  <section id="hub" class="view"></section>
+  <section id="daily" class="view" hidden></section>
+  <section id="album" class="view" hidden></section>
+  <section class="card" id="card" hidden>
+    <div class="lhead"><button class="back" id="backBtn" aria-label="Zurück">‹ Zurück</button><div style="flex:1;min-width:0"><div class="eyebrow" id="eyebrow"></div><h2 id="title"></h2></div><div class="stat" id="stat"></div></div>
     <div class="talk"><canvas id="bot" width="20" height="24" aria-hidden="true"></canvas><div class="bubble" id="intro" aria-live="polite"></div></div>
     <details class="rules"><summary>Die Regeln</summary><ul>
       <li>Jede Zelle bekommt eine 0 oder eine 1.</li>
@@ -212,11 +270,13 @@ footer button{font-size:16px}
     </div>
     <div class="won" id="won" hidden></div>
   </section>
-  <footer><span>Jedes Level ist ohne Raten lösbar. Der Tipp erklärt immer den nächsten logischen Schritt.</span><button id="wipe">Fortschritt löschen</button></footer>
+  <footer><span>Jedes Rätsel ist ohne Raten lösbar. Der Tipp erklärt immer den nächsten logischen Schritt.</span><button id="wipe">Fortschritt löschen</button></footer>
 </div>
 
 <script>
 const LEVELS=[{"id":1,"N":6,"sol":[21,37,26,19,44,42],"hints":[],"marks":[],"givens":[[1,1],[1,2],[1,3],[1,4],[2,2],[2,3],[3,2],[3,3],[3,4],[4,0],[4,4],[5,0],[5,1],[5,2],[5,4]]},{"id":2,"N":6,"sol":[50,42,13,22,41,21],"hints":[],"marks":[],"givens":[[0,2],[0,3],[1,3],[1,5],[2,2],[3,4],[4,3],[5,0]]},{"id":3,"N":6,"sol":[21,37,42,25,38,26],"hints":[{"r":1,"kind":"hex"},{"r":3,"kind":"hex"},{"r":4,"kind":"hex"}],"marks":[],"givens":[[2,2],[5,0],[5,3]]},{"id":9,"N":6,"sol":[50,38,13,26,37,25],"hints":[{"r":1,"kind":"oct"},{"r":4,"kind":"oct","mask":7},{"r":2,"kind":"oct","mask":56},{"r":5,"kind":"oct"}],"marks":[],"givens":[[3,0]]},{"id":4,"N":8,"sol":[172,75,150,108,51,201,180,83],"hints":[{"r":0,"kind":"dec"},{"r":5,"kind":"dec"},{"r":2,"kind":"hex","mask":15},{"r":3,"kind":"hex","mask":240},{"r":7,"kind":"hex","mask":15}],"marks":[],"givens":[[1,6],[2,3],[3,7]]},{"id":10,"N":8,"sol":[101,166,89,83,172,153,86,170],"hints":[{"c":0,"kind":"hex"},{"c":3,"kind":"dec"},{"c":6,"kind":"hex","mask":240},{"r":4,"kind":"hex","mask":15},{"r":1,"kind":"dec"}],"marks":[],"givens":[[0,2],[3,1],[6,5],[6,6],[7,7]]},{"id":5,"N":8,"sol":[165,147,106,149,108,43,212,90],"hints":[],"marks":[{"a":[4,2],"b":[4,3],"eq":false},{"a":[6,3],"b":[7,3],"eq":true},{"a":[6,6],"b":[7,6],"eq":false},{"a":[0,1],"b":[1,1],"eq":true},{"a":[0,5],"b":[0,6],"eq":false},{"a":[6,4],"b":[7,4],"eq":false},{"a":[7,4],"b":[7,5],"eq":false},{"a":[6,1],"b":[7,1],"eq":true},{"a":[0,5],"b":[1,5],"eq":false},{"a":[6,2],"b":[6,3],"eq":false},{"a":[2,4],"b":[2,5],"eq":false},{"a":[2,2],"b":[3,2],"eq":false},{"a":[7,6],"b":[7,7],"eq":false},{"a":[6,0],"b":[7,0],"eq":false},{"a":[4,2],"b":[5,2],"eq":true},{"a":[5,5],"b":[5,6],"eq":false}],"givens":[[0,1],[0,5],[1,4],[2,4],[4,1],[4,7],[6,4],[7,0]]},{"id":6,"N":8,"sol":[178,169,85,106,149,77,170,86],"hints":[{"r":2,"kind":"ascii"},{"r":3,"kind":"ascii"},{"r":5,"kind":"ascii"}],"marks":[],"reveal":{"type":"text","key":[245,236,30,36,212,14,225,2],"word":"GEKNACKT"},"givens":[[0,2],[0,3],[6,7],[7,0],[7,7]]},{"id":7,"N":8,"sol":[43,201,212,54,75,165,180,90],"hints":[],"marks":[],"reveal":{"type":"image","cipher":[51,245,170,237,180,129,238,255],"img":[24,60,126,219,255,36,90,165]},"givens":[[0,1],[1,0],[1,2],[1,7],[2,1],[3,0],[4,0],[4,7],[5,2],[5,4],[5,7],[6,3],[7,2]]},{"id":8,"N":6,"sol":[22,11,52,44,19,41],"hints":[{"r":0,"kind":"rgb"},{"r":2,"kind":"rgb"},{"r":5,"kind":"rgb"}],"marks":[],"givens":[[1,0],[3,1],[3,2]]},{"id":11,"N":10,"sol":[211,409,812,722,425,342,620,659,301,614],"hints":[{"r":2,"kind":"dec"},{"r":7,"kind":"dec"},{"c":4,"kind":"dec"},{"c":8,"kind":"dec"}],"marks":[{"a":[2,0],"b":[3,0],"eq":true},{"a":[4,7],"b":[5,7],"eq":false},{"a":[1,7],"b":[2,7],"eq":false},{"a":[6,1],"b":[6,2],"eq":true},{"a":[1,1],"b":[2,1],"eq":true},{"a":[6,1],"b":[7,1],"eq":true},{"a":[5,7],"b":[6,7],"eq":true}],"givens":[[3,7],[3,9],[6,7]]}];
+const SPRITES = {"BYTE":{"grid":["........pppp","........pppp",".........PP",".........PP","....SSSSSSSSSSSS","....SSSSSSSSSSSS","....SSdddSSdddSS","....SSdddSSdddSS","....SSSSSSSSSSSS","....SSSddddddSSS","....SSSSSSSSSSSS","........EEEE","...EEEEEEEEEEEEEE","MMMEEEEEEEEEEEEEEMMM","MMMEEEEddddddEEEEMMM","MMMEEEEdeeeedEEEEMMM","MMMEEEEdeeeedEEEEMMM","MMMEEEEddddddEEEEMMM","MMMEEEEEEEEEEEEEEMMM","MMMEEEEEEEEEEEEEEMMM",".....MMM....MMM",".....MMM....MMM",".....MMM....MMM",".....MMM....MMM"],"key":{"E":"#3DFF7A","e":"#FFB000","S":"#3DFF7A","M":"#3DFF7A","P":"#3DFF7A","p":"#FFB000","d":"#0A120D"}},"OKTA":{"grid":[".......c.cc.c",".......cccccc",".........GG",".....GGGGGGGGGG","....GGGGGGGGGGGG","...GGGGGGGGGGGGGG","...GGddddddddddGG","...GGdeeddddeedGG","...GGGGGGGGGGGGGG","....GGGGGGGGGGGG","..GGGGGGGGGGGGGGGG","..GGdGGdGGGGdGGdGG","..J.J.J.J..J.J.J.J","..J.J.J.J..J.J.J.J",".J..J.J.J..J.J.J..J","J...J.J.J..J.J.J...J","A...A.A.A..A.A.A...A","A...A.A.A..A.A.A...A","A...k.A.k..k.A.k...A","A.....A......A.....A","k.....k......k.....k","","",""],"key":{"G":"#FF9E2C","c":"#FFE7B3","e":"#FFE7B3","J":"#FF9E2C","A":"#FF9E2C","k":"#FFE7B3","d":"#0A120D"}},"HEXA":{"grid":["...n............n","...N............N","....N..........N",".....N........N","......SSSSSSSS",".....SSSSSSSSSS","....SSddddddddSS","...SSSdeeddeedSSS","...SSSddddddddSSS","....SSdddeedddSS",".....SSSSSSSSSS","......SSSSSSSS","........SSSS","...SSSSSSSSSSSSSS","...SddddddddddddS","...SdllldlldddldS","...SSSSSSSSSSSSSS","...SddddddddddddS","...SdldllldlddldS","...SSSSSSSSSSSSSS","....SSSSSSSSSSSS","...SSdSSdSSdSSdSS","....SSSSSSSSSSSS",""],"key":{"S":"#4DE8FF","e":"#E0FCFF","l":"#FFB000","N":"#4DE8FF","n":"#E0FCFF","d":"#0A120D"}},"PIXA":{"grid":["","","..RRRRRRRRRRRRRRRR","..RddddddddddddddR","..RdddDDddddDDdddR",".RRdddDDddddDDdddRR",".RRddddddddddddddRR",".RRddDddddddddDddRR",".RRdddDDDDDDDDdddRR",".cRddddddddddddddRc","..RRRRRRRRRRRRRRRR","..RRRRRRRRRRRRRcRR",".........RR",".........RR",".........RR",".......RRRRRR","........RRRR",".......RRqqRR","........RRRR","","","","",""],"key":{"R":"#FF5CF0","c":"#4DE8FF","q":"#4DE8FF","D":"#FFD6FB","d":"#0A120D"}},"ASKI":{"grid":["..........PPPP","....TT....PtPP","...TTTT...PPPP","..TcTTcT..PPtP","..TTTTTT..PPPP","...TTTT...PtPP","....TT....PPPP","....BB....PPPP","..BBBBBBBBBBBBBBBB","..BddddddddddddddB","..BdddddlllldddddB","..BdddddlddldddddB","..BdddddlllldddddB","..BdddddlddldddddB","..BBBBBBBBBBBBBBBB",".BBBBBBBBBBBBBBBBBB",".BdBdBdBdBdBdBdBdBB",".BBdBdBdBdBdBdBdBBB",".BBBBBBBBBBBBBBBBBB","...BB..........BB","...BB..........BB","..BBB..........BBB","",""],"key":{"T":"#E8F0FF","c":"#FFB000","B":"#E8F0FF","l":"#FFB000","P":"#FFF1CC","t":"#0A120D","d":"#0A120D"}},"CHROMA":{"grid":["....r....g....b","....R....G....B","....R....G....B","....R....G....B","....R.KKKKKKKK.B","....R.KKKKKKKK.B","....R.KddddddK.B","....R.KdccccdK.B","....R.KddddddK.B","....RRKKKKKKKKBB","........KKKK",".....KKKKKKKKKK","....KKKKKKKKKKKK","....KK.KKKKKK.KK","....KK.KxyzKK.KK","....KK.KKKKKK.KK","....c..KKKKKK..c",".......KKKKKK","......KKKKKKKK",".....KKKKKKKKKK","....KKKKKKKKKKKK","......KK....KK",".....KKK....KKK",""],"key":{"R":"#FF4D4D","r":"#FFB3B3","x":"#FF4D4D","G":"#3DFF7A","g":"#B8FFCF","y":"#3DFF7A","B":"#4D8DFF","b":"#B3CCFF","z":"#4D8DFF","K":"#F2F5FA","c":"#FFFFFF","d":"#0A120D"}}};
+
 // ===== Binär-Sudoku Engine: Regeln, menschlicher Löser, Tipps =====
 const BS = (() => {
   const bit = (v,N,c) => (v>>(N-1-c))&1;
@@ -343,50 +403,173 @@ const BS = (() => {
 })();
 if(typeof module!=="undefined" && typeof document==="undefined") module.exports=BS;
 
-const SPRITES = {"BYTE":{"grid":["........pppp","........pppp",".........PP",".........PP","....SSSSSSSSSSSS","....SSSSSSSSSSSS","....SSdddSSdddSS","....SSdddSSdddSS","....SSSSSSSSSSSS","....SSSddddddSSS","....SSSSSSSSSSSS","........EEEE","...EEEEEEEEEEEEEE","MMMEEEEEEEEEEEEEEMMM","MMMEEEEddddddEEEEMMM","MMMEEEEdeeeedEEEEMMM","MMMEEEEdeeeedEEEEMMM","MMMEEEEddddddEEEEMMM","MMMEEEEEEEEEEEEEEMMM","MMMEEEEEEEEEEEEEEMMM",".....MMM....MMM",".....MMM....MMM",".....MMM....MMM",".....MMM....MMM"],"key":{"E":"#3DFF7A","e":"#FFB000","S":"#3DFF7A","M":"#3DFF7A","P":"#3DFF7A","p":"#FFB000","d":"#0A120D"}},"OKTA":{"grid":[".......c.cc.c",".......cccccc",".........GG",".....GGGGGGGGGG","....GGGGGGGGGGGG","...GGGGGGGGGGGGGG","...GGddddddddddGG","...GGdeeddddeedGG","...GGGGGGGGGGGGGG","....GGGGGGGGGGGG","..GGGGGGGGGGGGGGGG","..GGdGGdGGGGdGGdGG","..J.J.J.J..J.J.J.J","..J.J.J.J..J.J.J.J",".J..J.J.J..J.J.J..J","J...J.J.J..J.J.J...J","A...A.A.A..A.A.A...A","A...A.A.A..A.A.A...A","A...k.A.k..k.A.k...A","A.....A......A.....A","k.....k......k.....k","","",""],"key":{"G":"#FF9E2C","c":"#FFE7B3","e":"#FFE7B3","J":"#FF9E2C","A":"#FF9E2C","k":"#FFE7B3","d":"#0A120D"}},"HEXA":{"grid":["...n............n","...N............N","....N..........N",".....N........N","......SSSSSSSS",".....SSSSSSSSSS","....SSddddddddSS","...SSSdeeddeedSSS","...SSSddddddddSSS","....SSdddeedddSS",".....SSSSSSSSSS","......SSSSSSSS","........SSSS","...SSSSSSSSSSSSSS","...SddddddddddddS","...SdllldlldddldS","...SSSSSSSSSSSSSS","...SddddddddddddS","...SdldllldlddldS","...SSSSSSSSSSSSSS","....SSSSSSSSSSSS","...SSdSSdSSdSSdSS","....SSSSSSSSSSSS",""],"key":{"S":"#4DE8FF","e":"#E0FCFF","l":"#FFB000","N":"#4DE8FF","n":"#E0FCFF","d":"#0A120D"}},"PIXA":{"grid":["","","..RRRRRRRRRRRRRRRR","..RddddddddddddddR","..RdddDDddddDDdddR",".RRdddDDddddDDdddRR",".RRddddddddddddddRR",".RRddDddddddddDddRR",".RRdddDDDDDDDDdddRR",".cRddddddddddddddRc","..RRRRRRRRRRRRRRRR","..RRRRRRRRRRRRRcRR",".........RR",".........RR",".........RR",".......RRRRRR","........RRRR",".......RRqqRR","........RRRR","","","","",""],"key":{"R":"#FF5CF0","c":"#4DE8FF","q":"#4DE8FF","D":"#FFD6FB","d":"#0A120D"}},"ASKI":{"grid":["..........PPPP","....TT....PtPP","...TTTT...PPPP","..TcTTcT..PPtP","..TTTTTT..PPPP","...TTTT...PtPP","....TT....PPPP","....BB....PPPP","..BBBBBBBBBBBBBBBB","..BddddddddddddddB","..BdddddlllldddddB","..BdddddlddldddddB","..BdddddlllldddddB","..BdddddlddldddddB","..BBBBBBBBBBBBBBBB",".BBBBBBBBBBBBBBBBBB",".BdBdBdBdBdBdBdBdBB",".BBdBdBdBdBdBdBdBBB",".BBBBBBBBBBBBBBBBBB","...BB..........BB","...BB..........BB","..BBB..........BBB","",""],"key":{"T":"#E8F0FF","c":"#FFB000","B":"#E8F0FF","l":"#FFB000","P":"#FFF1CC","t":"#0A120D","d":"#0A120D"}},"CHROMA":{"grid":["....r....g....b","....R....G....B","....R....G....B","....R....G....B","....R.KKKKKKKK.B","....R.KKKKKKKK.B","....R.KddddddK.B","....R.KdccccdK.B","....R.KddddddK.B","....RRKKKKKKKKBB","........KKKK",".....KKKKKKKKKK","....KKKKKKKKKKKK","....KK.KKKKKK.KK","....KK.KxyzKK.KK","....KK.KKKKKK.KK","....c..KKKKKK..c",".......KKKKKK","......KKKKKKKK",".....KKKKKKKKKK","....KKKKKKKKKKKK","......KK....KK",".....KKK....KKK",""],"key":{"R":"#FF4D4D","r":"#FFB3B3","x":"#FF4D4D","G":"#3DFF7A","g":"#B8FFCF","y":"#3DFF7A","B":"#4D8DFF","b":"#B3CCFF","z":"#4D8DFF","K":"#F2F5FA","c":"#FFFFFF","d":"#0A120D"}}};
+// ===== Werkstatt, Album, Tagesrätsel =====
 const ROBOTS={BYTE:"#3DFF7A",OKTA:"#FF9E2C",HEXA:"#4DE8FF",PIXA:"#FF5CF0",ASKI:"#E8F0FF",CHROMA:"#7FB2FF"};
-const BOT={1: "BYTE", 2: "BYTE", 3: "HEXA", 9: "OKTA", 4: "HEXA", 10: "BYTE", 5: "BYTE", 6: "ASKI", 7: "PIXA", 8: "CHROMA", 11: "BYTE"};
+const SYS={BYTE:"Binär",OKTA:"Oktal",HEXA:"Hex",PIXA:"Pixel",ASKI:"ASCII",CHROMA:"RGB"};
+const BOT={1:"BYTE",2:"BYTE",3:"HEXA",9:"OKTA",4:"HEXA",10:"BYTE",5:"BYTE",6:"ASKI",7:"PIXA",8:"CHROMA",11:"BYTE"};
+const CARDS=[["BYTE",[1,2,5,10,11]],["HEXA",[3,4]],["OKTA",[9]],["ASKI",[6]],["PIXA",[7]],["CHROMA",[8]]];
+const NEED={1:0,2:1,3:2,9:3,4:3,5:4,10:5,6:5,7:6,8:7,11:10};
+const ASK={1:"Kannst du mir die Regeln zeigen?",2:"Hier fehlen ganz schön viele Vorgaben.",5:"Auf der Platine sind komische Zeichen: = und ×.",10:"Jetzt reden sogar die Spalten mit!",11:"Das große 10×10. Das schaffen wir nur zusammen.",
+  3:"Ich spreche nur Hex. Übersetzt du für mich?",4:"Dezimalzahlen? Wie altmodisch. Hilf mir trotzdem.",9:"Meine Zahnräder zählen in Achtern.",6:"Ich habe Post bekommen, aber sie ist verschlüsselt.",7:"Mein Bildschirm zeigt nur Rauschen.",8:"Meine Farben sind völlig durcheinander."};
 const WIN={BYTE:"Raster stabil. Ich spüre wieder Strom.",OKTA:"Alle Zahnräder greifen. Danke.",HEXA:"Fehlerfrei dekodiert. Trivial, natürlich.",PIXA:"Ich kann wieder sehen!",ASKI:"Endlich wieder Buchstaben.",CHROMA:"Alle drei Kanäle leuchten."};
-function drawBot(cv,name){ const s=SPRITES[name], g=cv.getContext("2d"); g.clearRect(0,0,20,24);
-  s.grid.forEach((row,y)=>[...row].forEach((ch,x)=>{ if(ch==="."||!s.key[ch]) return; g.fillStyle=s.key[ch]; g.fillRect(x,y,1,1); })); }
+const PLAN=[["BYTE","Sonntag","8×8 mit Zeichen"],["BYTE","Montag","6×6 pur"],["HEXA","Dienstag","Hex-Hinweise"],["OKTA","Mittwoch","Oktal-Hinweise"],["ASKI","Donnerstag","ASCII und Nachricht"],["PIXA","Freitag","Geheimbild"],["CHROMA","Samstag","Farbcodes"]];
+const DAILY_INTRO={BYTE:"Mein Tagesrätsel. Keine Tricks, nur die drei Regeln.",HEXA:"Heute wieder Hex. Für mich ist das Muttersprache.",OKTA:"Mittwoch ist Zahnradtag. Drei Bits pro Ziffer.",ASKI:"Heute kam wieder Post. Die Buchstabenzeilen helfen dir.",PIXA:"Irgendwo im Rauschen steckt ein Bild. Findest du es?",CHROMA:"Samstag: Farben mischen. Zwei Bits pro Kanal."};
+const IMGS=[[0x00,0x66,0xFF,0xFF,0x7E,0x3C,0x18,0x00],[0x3C,0x42,0xA5,0x81,0xA5,0x99,0x42,0x3C],[0x18,0x3C,0x7E,0xDB,0xFF,0x24,0x5A,0xA5],[0x18,0x3C,0x7E,0xFF,0x81,0xB5,0xB5,0xFF],[0x3C,0x7E,0xDB,0xFF,0xFF,0xFF,0xFF,0xA5],[0x81,0xC3,0xFF,0xDB,0xFF,0xE7,0x7E,0x3C],[0x18,0x18,0xFF,0x7E,0x3C,0x7E,0xE7,0x81],[0x08,0x0C,0xFE,0xFF,0xFE,0x0C,0x08,0x00]];
+const WORDS=["GEKNACKT","PERFEKT!","BITWEISE","KLASSE!!","GENIAL!!","LOGISCH!","SPITZE!!","BRAVO!!!","TOLL GEM","SUPERBIT"];
+
+function drawBot(cv,name,dim){ const s=SPRITES[name], g=cv.getContext("2d"); g.clearRect(0,0,20,24);
+  s.grid.forEach((row,y)=>[...row].forEach((ch,x)=>{ if(ch==="."||!s.key[ch]) return; g.fillStyle=dim?"#1E3326":s.key[ch]; g.fillRect(x,y,1,1); })); }
+
+// ---- Generator (gleiche Logik wie offline, mit Startwert aus dem Datum)
+function makeGen(seed){
+  let s=seed%2147483647; if(s<=0) s+=2147483646;
+  const rnd=()=>{s=(s*48271)%2147483647;return s/2147483647};
+  const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const validRows=N=>{const out=[];for(let v=0;v<1<<N;v++){let ones=0,ok=true;for(let i=0;i<N;i++){if((v>>i)&1)ones++;if(i>=2){const a=(v>>i)&1,b=(v>>(i-1))&1,c=(v>>(i-2))&1;if(a===b&&b===c)ok=false;}}if(ok&&ones===N/2)out.push(v);}return out;};
+  const colsOK=(rows,N,final)=>{for(let c=0;c<N;c++){const col=rows.map(r=>(r>>(N-1-c))&1);const o=col.filter(x=>x).length;if(o>N/2||col.length-o>N/2)return false;for(let i=0;i+2<col.length;i++)if(col[i]===col[i+1]&&col[i]===col[i+2])return false;}if(final){const st=new Set();for(let c=0;c<N;c++)st.add(rows.map(r=>(r>>(N-1-c))&1).join(""));if(st.size!==N)return false;}return true;};
+  const randSol=(N,filter)=>{const VR=validRows(N);for(let t=0;t<200;t++){let res=null;const rec=rows=>{if(res)return;if(rows.length===N){if(colsOK(rows,N,true)&&(!filter||filter(rows)))res=[...rows];return;}for(const v of shuf([...VR])){if(rows.includes(v))continue;const nr=[...rows,v];if(colsOK(nr,N,false))rec(nr);if(res)return;}};rec([]);if(res)return res;}return null;};
+  const reduce=(P,maxThink)=>{const all=[];for(let r=0;r<P.N;r++)for(let c=0;c<P.N;c++)all.push([r,c]);
+    P.givens=all.filter(([r,c])=>!(P.hints||[]).some(h=>BS.hCells(h,P.N).some(([a,b],k)=>a===r&&b===c&&((BS.hintMask(h,P.N)>>(P.N-1-k))&1))));
+    for(const cell of shuf([...P.givens])){const keep=P.givens;P.givens=keep.filter(x=>x!==cell);const sv=BS.solveLogic(P);if(!sv.ok||(sv.used["Durchdenken"]||0)>maxThink)P.givens=keep;}
+    return P;};
+  const reduceMarks=(P,maxThink)=>{for(const m of shuf([...P.marks])){const keep=P.marks;P.marks=keep.filter(x=>x!==m);const sv=BS.solveLogic(P);if(!sv.ok||(sv.used["Durchdenken"]||0)>maxThink)P.marks=keep;}return P;};
+  return {rnd,shuf,randSol,reduce,reduceMarks};
+}
+function dayKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function makeDaily(d){
+  const key=dayKey(d), wd=d.getDay(), [bot]=PLAN[wd];
+  const seed=[...key].reduce((h,ch)=>(h*31+ch.charCodeAt(0))>>>0,7)%2147483000+1;
+  const G=makeGen(seed); let P;
+  if(wd===1) P=G.reduce({N:6,sol:G.randSol(6),hints:[],marks:[]},2);
+  else if(wd===2){ const rows=G.shuf([0,1,2,3,4,5]).slice(0,3); P=G.reduce({N:6,sol:G.randSol(6),hints:rows.map(r=>({r,kind:"hex"})),marks:[]},2); }
+  else if(wd===3){ const rows=G.shuf([0,1,2,3,4,5]).slice(0,4); P=G.reduce({N:6,sol:G.randSol(6),hints:rows.map((r,i)=>i%2?{r,kind:"oct",mask:i===1?0b000111:0b111000}:{r,kind:"oct"}),marks:[]},2); }
+  else if(wd===4){ const sol=G.randSol(8,rows=>rows.filter(v=>v>=65&&v<=122&&/[A-Za-z]/.test(String.fromCharCode(v))).length>=3);
+    const ar=sol.map((v,i)=>[v,i]).filter(([v])=>v<=122&&/[A-Za-z]/.test(String.fromCharCode(v))).slice(0,3).map(([,i])=>i);
+    const word=WORDS[Math.floor(G.rnd()*WORDS.length)];
+    P=G.reduce({N:8,sol,hints:ar.map(r=>({r,kind:"ascii"})),marks:[],reveal:{type:"text",word,key:sol.map((v,i)=>v^word.charCodeAt(i))}},4); }
+  else if(wd===5){ const img=IMGS[Math.floor(G.rnd()*IMGS.length)], sol=G.randSol(8); P=G.reduce({N:8,sol,hints:[],marks:[],reveal:{type:"image",img,cipher:sol.map((v,i)=>v^img[i])}},4); }
+  else if(wd===6){ const rows=G.shuf([0,1,2,3,4,5]).slice(0,3).sort(); P=G.reduce({N:6,sol:G.randSol(6),hints:rows.map(r=>({r,kind:"rgb"})),marks:[]},2); }
+  else { const N=8, sol=G.randSol(8), cand=[]; for(let r=0;r<N;r++) for(let c=0;c<N;c++){ if(c+1<N) cand.push([[r,c],[r,c+1]]); if(r+1<N) cand.push([[r,c],[r+1,c]]); }
+    const marks=G.shuf(cand).slice(0,22).map(([a,b])=>({a,b,eq:BS.bit(sol[a[0]],N,a[1])===BS.bit(sol[b[0]],N,b[1])}));
+    P={N,sol,hints:[],marks}; G.reduce(P,4); G.reduceMarks(P,4); G.reduce(P,4); }
+  P.id="d"+key; P.bot=bot; P.daily=key; return P;
+}
+
 const META={
  1:{t:"Die drei Regeln",i:"Willkommen! Fülle das Raster mit Nullen und Einsen. Die Regeln findest du unten. Fang dort an, wo zwei gleiche Ziffern nebeneinanderstehen."},
- 2:{t:"Weniger Vorgaben",i:"<b>Neu: Durchdenken.</b> Manchmal reicht ein Blick nicht. Dann spiel eine Zeile gedanklich durch: Was passiert, wenn hier eine 1 stünde?"},
- 3:{t:"Hex-Hinweise",i:"<b>Neu: Hex.</b> Drei Zeilen sind nur als Hex-Zahl angegeben. Jede Hex-Ziffer steht für vier Bits. Bei sechs Bits heißt 0x2C also 10 1100."},
- 4:{t:"Dezimal und halbe Hex",i:"<b>Neu: 8×8.</b> Zwei Zeilen sind als Dezimalzahl angegeben. Andere verraten nur eine Hex-Ziffer: 0x?C heißt, die rechten vier Bits sind 1100."},
- 5:{t:"Gleich und verschieden",i:"<b>Neu: Zeichen.</b> Ein = zwischen zwei Zellen heißt, sie sind gleich. Ein × heißt, sie sind verschieden.",x:"= heißt gleich, × heißt verschieden."},
- 6:{t:"ASCII und Geheimnachricht",i:"<b>Neu: ASCII.</b> Drei Zeilen sind als Buchstabe angegeben. Großbuchstaben beginnen mit 010, Kleinbuchstaben mit 011. Außerdem ist dein Raster der Schlüssel zu einer Geheimnachricht: Jede fertige Zeile XOR ihr Schlüsselbyte ergibt einen Buchstaben."},
- 7:{t:"Das Geheimbild",i:"<b>Neu: Verschlüsseltes Bild.</b> Ein Bild wurde mit der Lösung per XOR verschlüsselt. Jede Zelle, die du füllst, entschlüsselt einen Pixel. Erkennst du das Motiv, hilft es dir sogar beim Lösen."},
- 9:{t:"Oktal-Hinweise",i:"<b>Neu: Oktal.</b> Jede Oktalziffer steht für drei Bits mit den Werten 4, 2 und 1. Bei sechs Bits heißt 52₈ also 101 010. Ein ? bedeutet, dass diese Ziffer nicht verraten wird."},
- 10:{t:"Spalten-Hinweise",i:"<b>Neu: Spalten.</b> Hinweise unter dem Raster gelten für die Spalte darüber. Gelesen wird von oben nach unten, die oberste Zelle ist das größte Bit."},
- 11:{t:"Das große Finale",i:"<b>Finale: 10×10.</b> Zehn Bits pro Zeile, Dezimal-Hinweise bis 1023 an Zeilen und Spalten und ein paar Zeichen. Kein Zeitdruck, nimm dir Ruhe.",x:"= heißt gleich, × heißt verschieden."},
- 8:{t:"Farbcodes",i:"<b>Neu: RGB.</b> Drei Zeilen sind als Farbe angegeben. Je zwei Bits pro Kanal, in der Reihenfolge Rot, Grün, Blau: 00 aus, 01 schwach, 10 mittel, 11 voll. Die drei Balken im Feld zeigen die Stärke der Kanäle.",x:"Farbe = RRGGBB, je zwei Bits pro Kanal."}
+ 2:{t:"Weniger Vorgaben",i:"Neu: Durchdenken. Manchmal reicht ein Blick nicht. Dann spiel eine Zeile gedanklich durch: Was passiert, wenn hier eine 1 stünde?"},
+ 3:{t:"Hex-Hinweise",i:"Neu: Hex. Drei Zeilen sind nur als Hex-Zahl angegeben. Jede Hex-Ziffer steht für vier Bits. Bei sechs Bits heißt 0x2C also 10 1100."},
+ 4:{t:"Dezimal und halbe Hex",i:"Neu: 8×8. Zwei Zeilen sind als Dezimalzahl angegeben. Andere verraten nur eine Hex-Ziffer: 0x?C heißt, die rechten vier Bits sind 1100."},
+ 5:{t:"Gleich und verschieden",i:"Neu: Zeichen. Ein = zwischen zwei Zellen heißt, sie sind gleich. Ein × heißt, sie sind verschieden.",x:"= heißt gleich, × heißt verschieden."},
+ 6:{t:"ASCII und Geheimnachricht",i:"Neu: ASCII. Drei Zeilen sind als Buchstabe angegeben. Großbuchstaben beginnen mit 010, Kleinbuchstaben mit 011. Dein Raster ist außerdem der Schlüssel zu meiner Post: Jede fertige Zeile XOR ihr Schlüsselbyte ergibt einen Buchstaben."},
+ 7:{t:"Das Geheimbild",i:"Neu: Verschlüsseltes Bild. Mein Bild wurde mit der Lösung per XOR verschlüsselt. Jede Zelle, die du füllst, entschlüsselt einen Pixel. Erkennst du das Motiv, hilft es dir sogar beim Lösen."},
+ 9:{t:"Oktal-Hinweise",i:"Neu: Oktal. Jede Oktalziffer steht für drei Bits mit den Werten 4, 2 und 1. Bei sechs Bits heißt 52₈ also 101 010. Ein ? bedeutet, dass diese Ziffer nicht verraten wird."},
+ 10:{t:"Spalten-Hinweise",i:"Neu: Spalten. Hinweise unter dem Raster gelten für die Spalte darüber. Gelesen wird von oben nach unten, die oberste Zelle ist das größte Bit."},
+ 11:{t:"Das große Finale",i:"Finale: 10×10. Zehn Bits pro Zeile, Dezimal-Hinweise bis 1023 an Zeilen und Spalten und ein paar Zeichen. Kein Zeitdruck, nimm dir Ruhe.",x:"= heißt gleich, × heißt verschieden."},
+ 8:{t:"Farbcodes",i:"Neu: RGB. Drei Zeilen sind als Farbe angegeben. Je zwei Bits pro Kanal, in der Reihenfolge Rot, Grün, Blau: 00 aus, 01 schwach, 10 mittel, 11 voll. Die drei Balken im Feld zeigen die Stärke der Kanäle.",x:"Farbe = RRGGBB, je zwei Bits pro Kanal."}
 };
 const $=id=>document.getElementById(id);
 const hex2=v=>v.toString(16).toUpperCase().padStart(2,"0");
-let progress={}; try{progress=JSON.parse(localStorage.getItem("binaersudoku")||"{}")}catch(e){}
-const save=()=>{try{localStorage.setItem("binaersudoku",JSON.stringify(progress))}catch(e){}};
-const S={li:0,g:null,hist:[],hinted:false,violated:false,tip:null,solved:false,moves:0};
-const P=()=>LEVELS[S.li];
+let progress={}, dailyDone={};
+try{progress=JSON.parse(localStorage.getItem("binaersudoku")||"{}")}catch(e){}
+try{dailyDone=JSON.parse(localStorage.getItem("binaersudoku-daily")||"{}")}catch(e){}
+const save=()=>{try{localStorage.setItem("binaersudoku",JSON.stringify(progress));localStorage.setItem("binaersudoku-daily",JSON.stringify(dailyDone))}catch(e){}};
+const S={cur:null,g:null,hist:[],hinted:false,violated:false,tip:null,solved:false,moves:0,view:"hub",daily:null};
+const P=()=>S.cur;
+const lvById=id=>LEVELS.find(x=>x.id===id);
+const botOf=L=>L.bot||BOT[L.id];
+const metaOf=L=>L.daily?{t:"Tagesrätsel",i:DAILY_INTRO[L.bot]+(L.reveal?.type==="text"?" Und wie immer ergibt jede fertige Zeile XOR Schlüssel einen Buchstaben.":""),x:L.marks?.length?"= heißt gleich, × heißt verschieden.":L.hints?.some(h=>h.kind==="rgb")?"Farbe = RRGGBB, je zwei Bits pro Kanal.":""}:META[L.id];
+const solvedCount=()=>LEVELS.filter(L=>progress[L.id]).length;
+function setRobotColor(bot){ const col=ROBOTS[bot]; document.documentElement.style.setProperty("--one",col); document.documentElement.style.setProperty("--glow",col+"55"); }
 
-function load(i){
-  S.li=i; S.g=BS.startGrid(P()); S.hist=[]; S.hinted=false; S.violated=false; S.tip=null; S.solved=false; S.moves=0; S.last=null;
-  $("won").hidden=true; render();
+// ---------- Ansichten ----------
+function show(v){
+  S.view=v;
+  ["hub","daily","album"].forEach(x=>$(x).hidden=x!==v);
+  $("card").hidden=v!=="play";
+  $("tabs").hidden=v==="play";
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v));
+  if(v==="hub") renderHub(); if(v==="daily") renderDaily(); if(v==="album") renderAlbum();
+  if(v!=="play"){ setRobotColor("BYTE"); }
+  window.scrollTo(0,0);
+}
+function renderHub(){
+  const n=solvedCount();
+  let html=`<div class="vhead"><h2>Werkstatt</h2><span>${n} von ${LEVELS.length} Bitten erfüllt</span></div><div class="bots">`;
+  for(const [bot,ids] of CARDS){
+    const avail=ids.filter(id=>NEED[id]<=n), open=avail.length>0;
+    const next=ids.find(id=>!progress[id]&&NEED[id]<=n);
+    const allDone=ids.every(id=>progress[id]);
+    const minNeed=Math.min(...ids.filter(id=>!progress[id]).map(id=>NEED[id]));
+    const ask=allDone?"Danke! Hier ist alles repariert.":next?ASK[next]:open?`Ich warte noch. Löse noch ${minNeed-n} ${minNeed-n===1?"Rätsel":"Rätsel"}.`:`Zzz … Ich wache auf, wenn du noch ${NEED[ids[0]]-n} ${NEED[ids[0]]-n===1?"Rätsel":"Rätsel"} löst.`;
+    html+=`<div class="botc${open?" open":" sleep"}" style="--c:${ROBOTS[bot]}">
+      <div class="top"><canvas width="20" height="24" data-bot="${bot}" data-dim="${open?0:1}" aria-hidden="true"></canvas><div><div class="nm">${bot}</div><div class="sy">${SYS[bot]}</div></div></div>
+      <div class="ask">${ask}</div>
+      <div class="lvdots">${ids.map((id,k)=>{const st=progress[id]||0, ok=NEED[id]<=n;return `<button class="lvdot${id===next?" next":""}${st?" done":""}" data-id="${id}" ${ok?"":"disabled"} aria-label="${META[id].t}${ok?"":", noch gesperrt"}" title="${META[id].t}">${k+1}<small>${st?"★".repeat(st):ok?"":"·"}</small></button>`;}).join("")}</div>
+    </div>`;
+  }
+  html+=`</div>`;
+  $("hub").innerHTML=html;
+  $("hub").querySelectorAll("canvas[data-bot]").forEach(cv=>drawBot(cv,cv.dataset.bot,cv.dataset.dim==="1"));
+}
+function streak(){
+  let n=0; const d=new Date();
+  if(!dailyDone[dayKey(d)]) d.setDate(d.getDate()-1);
+  while(dailyDone[dayKey(d)]){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+function renderDaily(){
+  const today=new Date(), wd=today.getDay(), [bot,dayName,kind]=PLAN[wd], key=dayKey(today), done=dailyDone[key];
+  setRobotColor(bot);
+  const start=new Date(today); start.setDate(today.getDate()-((wd+6)%7));
+  let week="";
+  for(let i=0;i<7;i++){ const d=new Date(start); d.setDate(start.getDate()+i); const k=dayKey(d), p=PLAN[d.getDay()], st=dailyDone[k]?.stars;
+    week+=`<div class="wd${k===key?" today":""}${st?" done":""}" style="--c:${ROBOTS[p[0]]}"><canvas width="20" height="24" data-bot="${p[0]}" aria-hidden="true"></canvas>${p[1].slice(0,2)}<i>${st?"★".repeat(st):""}</i></div>`; }
+  const sk=streak();
+  $("daily").innerHTML=`<div class="vhead"><h2>Tagesrätsel</h2><span>${today.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})}</span></div>
+    <div class="dcard"><div class="dtop"><canvas width="20" height="24" id="dbot" aria-hidden="true"></canvas><div><b>${bot} hat Dienst</b><p>${dayName}: ${kind}. ${done?`Heute schon gelöst, ${"★".repeat(done.stars)}.`:"Jeden Tag ein neues Rätsel, das es nur heute gibt."}</p></div></div>
+      <div class="actions"><button class="btn primary" id="playDaily">${done?"Nochmal spielen":"Rätsel starten"}</button></div></div>
+    <div class="vhead"><h2 style="font-size:24px">Dienstplan</h2><span class="streak">${sk?`Serie: ${sk} ${sk===1?"Tag":"Tage"}`:"Noch keine Serie"}</span></div>
+    <div class="week">${week}</div>`;
+  drawBot($("dbot"),bot);
+  $("daily").querySelectorAll(".wd canvas").forEach(cv=>drawBot(cv,cv.dataset.bot));
+  $("playDaily").onclick=()=>{ $("playDaily").textContent="Wird erzeugt …"; setTimeout(()=>{ S.daily=makeDaily(today); play(S.daily); },20); };
+}
+function artGrid(rows,N,on){ return `<div class="art" style="grid-template-columns:repeat(${N},1fr)">`+rows.flatMap(v=>[...Array(N)].map((_,c)=>`<b class="${(v>>(N-1-c))&1?"on":""}"></b>`)).join("")+`</div>`; }
+function tileFor(L,stars,cap,sub){
+  const bot=botOf(L), c=ROBOTS[bot];
+  let art;
+  if(L.reveal?.type==="image") art=artGrid(L.reveal.img,8);
+  else if(L.reveal?.type==="text") art=`<div class="word">${L.reveal.word}</div>`;
+  else if(L.hints?.some(h=>h.kind==="rgb")) art=`<div class="pal">${L.sol.map(v=>`<span style="background:${BS.rgbOf(v)}"></span>`).join("")}</div>`;
+  else art=artGrid(L.sol,L.N);
+  return `<div class="at got" style="--c:${c}">${art}<div class="cap">${cap}<small>${bot} · ${"★".repeat(stars)}</small>${sub?`<small>${sub}</small>`:""}</div></div>`;
+}
+function renderAlbum(){
+  const got=LEVELS.filter(L=>progress[L.id]).length, dk=Object.keys(dailyDone).sort().reverse();
+  let html=`<div class="vhead"><h2>Sammelalbum</h2><span>${got} von ${LEVELS.length} Werkstatt-Stücken · ${dk.length} Tagesrätsel</span></div><div class="alb">`;
+  for(const L of LEVELS){ const st=progress[L.id];
+    html+= st ? tileFor(L,st,META[L.id].t) : `<div class="at"><div class="q">?</div><div class="cap" style="color:var(--muted)">${botOf(L)} wartet</div></div>`; }
+  html+=`</div>`;
+  if(dk.length){ html+=`<div class="vhead"><h2 style="font-size:24px">Tagesrätsel</h2></div><div class="alb">`;
+    for(const k of dk){ const e=dailyDone[k]; html+=tileFor(e.L,e.stars,new Date(k+"T12:00").toLocaleDateString("de-DE",{day:"numeric",month:"short"})); }
+    html+=`</div>`; }
+  $("album").innerHTML=html;
+}
+
+// ---------- Spielen ----------
+function play(L){
+  S.cur=L; S.g=BS.startGrid(L); S.hist=[]; S.hinted=false; S.violated=false; S.tip=null; S.solved=false; S.moves=0; S.last=null;
+  $("won").hidden=true; show("play"); render();
 }
 const isGiven=(r,c)=>P().givens.some(([a,b])=>a===r&&b===c);
-
-function renderLevels(){
-  $("levels").innerHTML=LEVELS.map((L,i)=>{const s=progress[L.id]||0;return `<button class="lv" aria-pressed="${i===S.li}" data-i="${i}" title="${META[L.id].t}"><b>${i+1}</b><small>${"★".repeat(s)}${"☆".repeat(3-s)}</small></button>`;}).join("");
-}
 function render(){
-  const L=P(), m=META[L.id];
-  renderLevels();
-  $("eyebrow").textContent=`Level ${S.li+1} von ${LEVELS.length} · ${L.N}×${L.N}`;
+  const L=P(), m=metaOf(L), bot=botOf(L);
+  $("eyebrow").textContent=L.daily?`Tagesrätsel · ${new Date(L.daily+"T12:00").toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})} · ${L.N}×${L.N}`:`Bitte ${LEVELS.indexOf(L)+1} von ${LEVELS.length} · ${L.N}×${L.N}`;
   $("title").textContent=m.t;
-  const bot=BOT[L.id], col=ROBOTS[bot];
-  document.documentElement.style.setProperty("--one",col); document.documentElement.style.setProperty("--glow",col+"55");
-  drawBot($("bot"),bot);
-  if(!S.tip) $("intro").innerHTML=`<b>${bot}:</b> ${m.i.replace(/<b>|<\/b>/g,"")}`;
+  $("backBtn").textContent=L.daily?"‹ Tagesrätsel":"‹ Werkstatt";
+  setRobotColor(bot); drawBot($("bot"),bot);
+  if(!S.tip) $("intro").innerHTML=`<b>${bot}:</b> ${m.i}`;
   $("ruleExtra").hidden=!m.x; $("ruleExtra").textContent=m.x||"";
   renderBoard(); renderSecret(); renderTip();
   $("undoBtn").disabled=!S.hist.length;
@@ -414,7 +597,6 @@ function renderBoard(){
     html+=`<span class="mark" style="left:${x};top:${y}" aria-hidden="true">${mk.eq?"=":"×"}</span>`;
   }
   bw.innerHTML=html; bw.classList.toggle("solved",S.solved);
-  // Hinweise an Zeilen und Spalten
   const hs=L.hints||[];
   const okOf=h=>{ const m=BS.hintMask(h,N), t=BS.hVal(L,h), cl=BS.hCells(h,N); if(!cl.every(([r,c],k)=>!((m>>(N-1-k))&1)||g[r][c]!=null)) return null; return cl.every(([r,c],k)=>!((m>>(N-1-k))&1)||g[r][c]===BS.bit(t,N,k)); };
   const rh=hs.filter(x=>x.r!=null), ch=hs.filter(x=>x.c!=null);
@@ -435,8 +617,7 @@ function renderBoard(){
 }
 function renderSecret(){
   const L=P(), N=L.N, g=S.g, sec=$("secret"), rv=L.reveal;
-  if(!rv&&!S.solved){ sec.hidden=true; return; }
-  if(!rv&&S.solved&&L.hints.some(h=>h.kind==="rgb")){
+  if(!rv&&S.solved&&(L.hints||[]).some(h=>h.kind==="rgb")){
     sec.hidden=false; sec.innerHTML=`<div class="label">Deine Farbpalette</div><div class="palette">${L.sol.map(v=>`<span style="background:${BS.rgbOf(v)}" title="${v.toString(2).padStart(6,"0")}"></span>`).join("")}</div>`; return; }
   if(!rv){ sec.hidden=true; return; }
   sec.hidden=false;
@@ -452,7 +633,7 @@ function renderSecret(){
 function renderTip(){
   $("tip").hidden=true;
   if(!S.tip) return;
-  const bot=BOT[P().id];
+  const bot=botOf(P());
   $("intro").innerHTML=`<b>${bot}: ${S.tip.tech}.</b> ${S.tip.why}${S.tip.set&&S.tip.set.length?`<div class="actions" style="margin-top:8px"><button class="btn primary" id="apply">Eintragen</button><button class="btn" id="close">Selbst machen</button></div>`:`<div class="actions" style="margin-top:8px"><button class="btn" id="close">Okay</button></div>`}`;
   if($("apply")) $("apply").onclick=()=>{ push(); for(const [r,c,v] of S.tip.set) S.g[r][c]=v; S.tip=null; S.moves++; after(); };
   $("close").onclick=()=>{ S.tip=null; render(); };
@@ -481,28 +662,33 @@ function hint(){
   render();
 }
 function showWin(){
-  const L=P(), stars=1+(!S.hinted?1:0)+(!S.violated?1:0);
-  progress[L.id]=Math.max(stars,progress[L.id]||0); save(); renderLevels();
-  const last=S.li===LEVELS.length-1;
-  const extra=L.reveal?.type==="text"?`Die Nachricht lautet <b>${L.reveal.word}</b>.`:L.reveal?.type==="image"?`Das Bild ist entschlüsselt.`:L.hints?.some(h=>h.kind==="rgb")?`Jede Zeile ist eine Farbe, siehe Palette.`:``;
-  const bot=BOT[L.id];
+  const L=P(), stars=1+(!S.hinted?1:0)+(!S.violated?1:0), bot=botOf(L);
+  const before=solvedCount();
+  if(L.daily){ const prev=dailyDone[L.daily]; dailyDone[L.daily]={stars:Math.max(stars,prev?.stars||0),L:{N:L.N,sol:L.sol,hints:(L.hints||[]).map(h=>({kind:h.kind})),reveal:L.reveal?(L.reveal.type==="image"?{type:"image",img:L.reveal.img}:{type:"text",word:L.reveal.word}):null,bot:L.bot}}; }
+  else progress[L.id]=Math.max(stars,progress[L.id]||0);
+  save();
+  const after=solvedCount();
+  const woke=!L.daily&&after>before?CARDS.filter(([b,ids])=>Math.min(...ids.map(id=>NEED[id]))===after).map(([b])=>b):[];
+  const extra=L.reveal?.type==="text"?`Die Nachricht lautet <b>${L.reveal.word}</b>.`:L.reveal?.type==="image"?`Das Bild ist entschlüsselt.`:(L.hints||[]).some(h=>h.kind==="rgb")?`Jede Zeile ist eine Farbe, siehe Palette.`:``;
   $("won").innerHTML=`<canvas id="wonbot" width="20" height="24" aria-hidden="true" style="width:80px;height:96px;image-rendering:pixelated;filter:drop-shadow(0 0 8px var(--glow))"></canvas><h3>Gelöst!</h3><p><b>${bot}:</b> ${WIN[bot]}</p><div class="stars">${[0,1,2].map(i=>`<span class="${i<stars?"":"off"}">★</span>`).join("")}</div>
     <ul><li class="got">★ Raster gelöst</li><li class="${!S.hinted?"got":""}">★ ohne Tipp</li><li class="${!S.violated?"got":""}">★ ohne Regelverstoß</li></ul>
-    ${extra?`<p>${extra}</p>`:""}
-    <div class="actions"><button class="btn" id="look">Raster ansehen</button><button class="btn" id="again">Nochmal</button>${last?"":`<button class="btn primary" id="next">Nächstes Level</button>`}</div>`;
+    ${extra?`<p>${extra}</p>`:""}<p>Neu im Sammelalbum${L.daily?": dein Tagesrätsel":""}.${woke.length?` <b>${woke.join(" und ")}</b> ${woke.length>1?"sind":"ist"} aufgewacht!`:""}</p>
+    <div class="actions"><button class="btn" id="look">Raster ansehen</button><button class="btn" id="toAlbum">Album</button><button class="btn primary" id="home">${L.daily?"Zum Dienstplan":"Zur Werkstatt"}</button></div>`;
   $("won").hidden=false; drawBot($("wonbot"),bot);
   $("look").onclick=()=>{ $("won").hidden=true; };
-  $("again").onclick=()=>load(S.li);
-  if(!last){ $("next").onclick=()=>load(S.li+1); $("next").focus(); }
+  $("toAlbum").onclick=()=>show("album");
+  $("home").onclick=()=>show(L.daily?"daily":"hub"); $("home").focus();
 }
 $("board").addEventListener("click",e=>{const b=e.target.closest(".cell");if(b)tap(+b.dataset.r,+b.dataset.c);});
-$("levels").addEventListener("click",e=>{const b=e.target.closest(".lv");if(b)load(+b.dataset.i);});
+$("hub").addEventListener("click",e=>{const b=e.target.closest(".lvdot");if(b&&!b.disabled)play(lvById(+b.dataset.id));});
+$("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(b)show(b.dataset.v);});
+$("backBtn").onclick=()=>show(P()?.daily?"daily":"hub");
 $("hintBtn").onclick=hint;
 $("undoBtn").onclick=()=>{ if(!S.hist.length||S.solved) return; S.g=S.hist.pop(); S.tip=null; render(); };
-$("resetBtn").onclick=()=>load(S.li);
+$("resetBtn").onclick=()=>play(P());
 $("optErr").onchange=()=>renderBoard();
-$("wipe").onclick=()=>{progress={};save();renderLevels();};
-load(0);
+$("wipe").onclick=()=>{progress={};dailyDone={};save();show(S.view==="play"?"hub":S.view);};
+show("hub");
 
 </script>
 </body>
