@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Binär-Sudoku</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;600;800&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: ein ruhiges Spielbrett im Zentrum, Levelleiste darüber, Tipp-Box und Geheimnis-Panel darunter.
+   Bewusst ein dunkles Thema: Nullen kühl, Einsen warm, beide leuchten auf dunklem Grund. */
+:root{
+  color-scheme: dark;
+  --ink:#0e1120; --panel:#161a2d; --panel2:#1d2240; --tile:#232946; --line:#2c3256;
+  --fg:#eceaf6; --muted:#8f93b5; --zero:#4fd1c5; --one:#ffb547; --acc:#b9a4ff;
+  --ok:#5ee0a0; --bad:#ff6b7a;
+  --f-display:"Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --f-body:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ink);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 40px}
+.wrap{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:800;font-size:22px;margin:0;letter-spacing:-.02em}
+h1 .z{color:var(--zero)} h1 .o{color:var(--one)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.levels{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+@media (max-width:460px){.levels{grid-template-columns:repeat(4,1fr)}}
+.lv{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:1px}
+.lv b{font-family:var(--f-display);font-size:13px}
+.lv small{font-size:9px;letter-spacing:1px;color:var(--one)}
+.lv[aria-pressed="true"]{border-color:var(--acc);background:var(--panel2)}
+.lv[aria-pressed="true"] b{color:var(--acc)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.lhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.lhead h2{font-family:var(--f-display);font-size:18px;margin:0;color:var(--acc);text-wrap:balance}
+.eyebrow{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.intro{font-size:14px;background:var(--panel2);border-radius:10px;padding:10px 12px;border-left:3px solid var(--acc);max-width:62ch}
+.intro b{color:var(--acc);font-weight:600}
+details.rules{font-size:14px;color:var(--muted)}
+details.rules summary{cursor:pointer;color:var(--fg)}
+details.rules ul{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:2px}
+.stage{container-type:inline-size;width:100%;display:flex;justify-content:center}
+.boardwrap{display:flex;gap:8px;align-items:flex-start}
+.board{position:relative;display:grid;gap:var(--gap);padding:var(--gap);background:var(--ink);border-radius:14px;border:1px solid var(--line)}
+.cell{width:var(--cs);height:var(--cs);border-radius:calc(var(--cs) * .22);border:none;background:var(--tile);
+  font-family:var(--f-display);font-weight:800;font-size:calc(var(--cs) * .44);padding:0;transition:background .12s, transform .08s, box-shadow .2s;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.cell:active{transform:scale(.93)}
+.cell.v0{color:var(--zero);background:color-mix(in srgb,var(--zero) 14%,var(--tile))}
+.cell.v1{color:var(--one);background:color-mix(in srgb,var(--one) 16%,var(--tile))}
+.cell.given{cursor:default;box-shadow:inset 0 0 0 2px color-mix(in srgb,currentColor 55%,transparent)}
+.cell.given.v0{background:color-mix(in srgb,var(--zero) 30%,var(--tile))}
+.cell.given.v1{background:color-mix(in srgb,var(--one) 32%,var(--tile))}
+.cell.err{color:var(--bad);background:color-mix(in srgb,var(--bad) 20%,var(--tile));box-shadow:inset 0 0 0 2px var(--bad)}
+.cell.tgt{animation:pulse 1s ease-in-out infinite;box-shadow:inset 0 0 0 2px #fff}
+.cell.ref{box-shadow:inset 0 0 0 2px var(--acc)}
+.cell.wrong{box-shadow:inset 0 0 0 2px var(--bad);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(.9)}}
+.board.solved .cell{animation:wave .6s ease both;animation-delay:calc(var(--i) * 18ms)}
+@keyframes wave{40%{transform:translateY(-4px) scale(1.04)}}
+.mark{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);color:var(--fg);
+  font-family:var(--f-display);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);pointer-events:none;z-index:2}
+.hints{display:grid;gap:var(--gap);padding-block:var(--gap)}
+.hint{height:var(--cs);display:flex;align-items:center;font-family:var(--f-display);font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
+.hint.ok{color:var(--ok)} .hint.bad{color:var(--bad)}
+.sw{width:calc(var(--cs) * .9);height:calc(var(--cs) * .9);border-radius:8px;border:1px solid var(--line);display:flex;align-items:flex-end;justify-content:center;gap:2px;padding:3px}
+.sw i{width:5px;background:rgba(255,255,255,.85);border-radius:1px;box-shadow:0 0 0 1px rgba(0,0,0,.45)}
+.tipbox{background:var(--panel2);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--acc)}
+.tipbox b{color:var(--acc);font-family:var(--f-display);font-size:13px}
+.tipbox p{margin:0;font-size:14px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:600;font-size:14px}
+.btn.primary{background:var(--acc);color:var(--ink);border-color:var(--acc)}
+.btn:disabled{opacity:.4;cursor:default}
+.stat{font-family:var(--f-display);font-size:12px;color:var(--muted)}
+.toggle{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--muted);cursor:pointer}
+.toggle input{accent-color:var(--acc)}
+/* Geheimnisse */
+.secret{display:flex;flex-direction:column;gap:8px;align-items:center;background:var(--ink);border:1px solid var(--line);border-radius:14px;padding:12px}
+.secret .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.keys{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;width:100%;max-width:440px}
+.kt{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 0}
+.kt small{font-family:var(--f-display);font-size:10px;color:var(--muted)}
+.kt span{font-family:var(--f-display);font-size:20px;font-weight:800;color:var(--muted);height:28px}
+.kt.open{border-color:var(--acc)} .kt.open span{color:var(--acc)}
+.pix{display:grid;grid-template-columns:repeat(8,16px);gap:2px;padding:6px;border-radius:10px;background:var(--panel)}
+.pix b{width:16px;height:16px;border-radius:3px;background:var(--tile);transition:background .3s}
+.pix b.noise{background:color-mix(in srgb,var(--muted) 35%,var(--tile))}
+.pix b.on{background:var(--acc);box-shadow:0 0 8px color-mix(in srgb,var(--acc) 60%,transparent)}
+.palette{display:flex;gap:4px}
+.palette span{width:34px;height:34px;border-radius:8px;border:1px solid var(--line)}
+/* Gewinn */
+.won{position:absolute;inset:0;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(3px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px;z-index:5}
+.won h3{font-family:var(--f-display);margin:0;font-size:24px;color:var(--acc)}
+.stars{font-size:34px;letter-spacing:6px;color:var(--one)}
+.stars .off{opacity:.2}
+.won ul{list-style:none;padding:0;margin:0;font-size:14px;color:var(--muted)}
+.won li.got{color:var(--fg)}
+.won p{margin:0;max-width:40ch;color:var(--fg)}
+footer{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+footer button{background:none;border:none;color:var(--muted);text-decoration:underline;padding:0;font-size:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Bin<span class="o">ä</span>r-Sudoku</h1>
+    <label class="toggle"><input type="checkbox" id="optErr" checked> Regelverstöße markieren</label>
+  </header>
+  <nav class="levels" id="levels" aria-label="Level"></nav>
+  <section class="card" id="card">
+    <div class="lhead"><div><div class="eyebrow" id="eyebrow"></div><h2 id="title"></h2></div><div class="stat" id="stat"></div></div>
+    <div class="intro" id="intro"></div>
+    <details class="rules"><summary>Die Regeln</summary><ul>
+      <li>Jede Zelle bekommt eine 0 oder eine 1.</li>
+      <li>Nie drei gleiche Ziffern direkt nebeneinander oder untereinander.</li>
+      <li>Jede Zeile und jede Spalte hat gleich viele Nullen und Einsen.</li>
+      <li>Keine zwei Zeilen sind gleich, keine zwei Spalten sind gleich.</li>
+      <li id="ruleExtra" hidden></li>
+    </ul></details>
+    <div class="stage"><div class="boardwrap"><div class="board" id="board"></div><div class="hints" id="hints"></div></div></div>
+    <div class="secret" id="secret" hidden></div>
+    <div class="tipbox" id="tip" hidden></div>
+    <div class="bar">
+      <div class="actions">
+        <button class="btn primary" id="hintBtn">Tipp</button>
+        <button class="btn" id="undoBtn">Rückgängig</button>
+        <button class="btn" id="resetBtn">Neu starten</button>
+      </div>
+      <span class="stat">Antippen: leer → 0 → 1</span>
+    </div>
+    <div class="won" id="won" hidden></div>
+  </section>
+  <footer><span>Jedes Level ist ohne Raten lösbar. Der Tipp erklärt immer den nächsten logischen Schritt.</span><button id="wipe">Fortschritt löschen</button></footer>
+</div>
+
+<script>
+const LEVELS=[{"id":1,"N":6,"sol":[21,37,26,19,44,42],"hints":[],"marks":[],"givens":[[1,1],[1,2],[1,3],[1,4],[2,2],[2,3],[3,2],[3,3],[3,4],[4,0],[4,4],[5,0],[5,1],[5,2],[5,4]]},{"id":2,"N":6,"sol":[50,42,13,22,41,21],"hints":[],"marks":[],"givens":[[0,2],[0,3],[1,3],[1,5],[2,2],[3,4],[4,3],[5,0]]},{"id":3,"N":6,"sol":[21,37,42,25,38,26],"hints":[{"r":1,"kind":"hex"},{"r":3,"kind":"hex"},{"r":4,"kind":"hex"}],"marks":[],"givens":[[2,2],[5,0],[5,3]]},{"id":4,"N":8,"sol":[172,75,150,108,51,201,180,83],"hints":[{"r":0,"kind":"dec"},{"r":5,"kind":"dec"},{"r":2,"kind":"hex","mask":15},{"r":3,"kind":"hex","mask":240},{"r":7,"kind":"hex","mask":15}],"marks":[],"givens":[[1,6],[2,3],[3,7]]},{"id":5,"N":8,"sol":[165,147,106,149,108,43,212,90],"hints":[],"marks":[{"a":[4,2],"b":[4,3],"eq":false},{"a":[6,3],"b":[7,3],"eq":true},{"a":[6,6],"b":[7,6],"eq":false},{"a":[0,1],"b":[1,1],"eq":true},{"a":[0,5],"b":[0,6],"eq":false},{"a":[6,4],"b":[7,4],"eq":false},{"a":[7,4],"b":[7,5],"eq":false},{"a":[6,1],"b":[7,1],"eq":true},{"a":[0,5],"b":[1,5],"eq":false},{"a":[6,2],"b":[6,3],"eq":false},{"a":[2,4],"b":[2,5],"eq":false},{"a":[2,2],"b":[3,2],"eq":false},{"a":[7,6],"b":[7,7],"eq":false},{"a":[6,0],"b":[7,0],"eq":false},{"a":[4,2],"b":[5,2],"eq":true},{"a":[5,5],"b":[5,6],"eq":false}],"givens":[[0,1],[0,5],[1,4],[2,4],[4,1],[4,7],[6,4],[7,0]]},{"id":6,"N":8,"sol":[178,169,85,106,149,77,170,86],"hints":[{"r":2,"kind":"ascii"},{"r":3,"kind":"ascii"},{"r":5,"kind":"ascii"}],"marks":[],"reveal":{"type":"text","key":[245,236,30,36,212,14,225,2],"word":"GEKNACKT"},"givens":[[0,2],[0,3],[6,7],[7,0],[7,7]]},{"id":7,"N":8,"sol":[43,201,212,54,75,165,180,90],"hints":[],"marks":[],"reveal":{"type":"image","cipher":[51,245,170,237,180,129,238,255],"img":[24,60,126,219,255,36,90,165]},"givens":[[0,1],[1,0],[1,2],[1,7],[2,1],[3,0],[4,0],[4,7],[5,2],[5,4],[5,7],[6,3],[7,2]]},{"id":8,"N":6,"sol":[22,11,52,44,19,41],"hints":[{"r":0,"kind":"rgb"},{"r":2,"kind":"rgb"},{"r":5,"kind":"rgb"}],"marks":[],"givens":[[1,0],[3,1],[3,2]]}];
+// ===== Binär-Sudoku Engine: Regeln, menschlicher Löser, Tipps =====
+const BS = (() => {
+  const bit = (v,N,c) => (v>>(N-1-c))&1;
+  function lines(N){ const L=[]; for(let i=0;i<N;i++){ L.push({kind:"Zeile",i,cells:[...Array(N)].map((_,k)=>[i,k])}); L.push({kind:"Spalte",i,cells:[...Array(N)].map((_,k)=>[k,i])}); } return L; }
+  const hintMask = (h,N) => h.mask==null ? (1<<N)-1 : h.mask;
+  function hintText(h,v,N){
+    const m=hintMask(h,N);
+    if(h.kind==="dec") return String(v);
+    if(h.kind==="ascii") return "„"+String.fromCharCode(v)+"“";
+    if(h.kind==="rgb") return "";
+    const digits=Math.ceil(N/4); let s="";
+    for(let d=digits-1;d>=0;d--){ const nm=(m>>(d*4))&15; s+= nm===15 || (N===6&&d===1&&nm===3) ? ((v>>(d*4))&15).toString(16).toUpperCase() : "?"; }
+    return "0x"+s;
+  }
+  function rgbOf(v){ const lv=[0,85,170,255]; return `rgb(${lv[(v>>4)&3]},${lv[(v>>2)&3]},${lv[v&3]})`; }
+
+  // Regelverstöße im aktuellen Zustand
+  function errors(P,g){
+    const N=P.N, bad=new Set();
+    for(const L of lines(N)){
+      const v=L.cells.map(([r,c])=>g[r][c]);
+      for(let i=0;i+2<N;i++) if(v[i]!=null&&v[i]===v[i+1]&&v[i]===v[i+2]) [i,i+1,i+2].forEach(k=>bad.add(L.cells[k].join(",")));
+      for(const s of [0,1]) if(v.filter(x=>x===s).length>N/2) L.cells.forEach(([r,c],k)=>{ if(v[k]===s) bad.add(r+","+c); });
+    }
+    for(const m of P.marks||[]){ const a=g[m.a[0]][m.a[1]], b=g[m.b[0]][m.b[1]]; if(a!=null&&b!=null&&(a===b)!==m.eq){ bad.add(m.a.join(",")); bad.add(m.b.join(",")); } }
+    for(const h of P.hints||[]){ const m=hintMask(h,N), t=P.sol[h.r]; for(let c=0;c<N;c++) if((m>>(N-1-c))&1){ const x=g[h.r][c]; if(x!=null&&x!==bit(t,N,c)) bad.add(h.r+","+c); } }
+    // doppelte volle Zeilen/Spalten
+    for(const kind of ["Zeile","Spalte"]){ const seen={}; for(let i=0;i<N;i++){ const cells=[...Array(N)].map((_,k)=>kind==="Zeile"?[i,k]:[k,i]); const v=cells.map(([r,c])=>g[r][c]); if(v.some(x=>x==null)) continue; const k=v.join(""); if(seen[k]){ [...seen[k],...cells].forEach(x=>bad.add(x.join(","))); } else seen[k]=cells; } }
+    return bad;
+  }
+
+  // ---- Techniken: jede liefert {set:[[r,c,v]], refs:[[r,c]], tech, why} oder null
+  const opp=v=>1-v, nm=v=>v===1?"Eins":"Null", nmP=v=>v===1?"Einsen":"Nullen";
+  function techHint(P,g){
+    const N=P.N;
+    for(const h of P.hints||[]){ const m=hintMask(h,N), t=P.sol[h.r];
+      for(let c=0;c<N;c++) if(((m>>(N-1-c))&1)&&g[h.r][c]==null){
+        const set=[]; for(let k=0;k<N;k++) if(((m>>(N-1-k))&1)&&g[h.r][k]==null) set.push([h.r,k,bit(t,N,k)]);
+        const txt=h.kind==="rgb"?"Die Farbe":"Der Hinweis "+hintText(h,t,N);
+        const bits=[...Array(N)].map((_,k)=>((m>>(N-1-k))&1)?bit(t,N,k):"·").join("");
+        let why;
+        if(h.kind==="rgb") why=`Die Farbe von Zeile ${h.r+1} besteht aus drei Kanälen mit je zwei Bits: 00 = aus, 01 = schwach, 10 = mittel, 11 = voll. Rot, Grün, Blau ergeben zusammen ${bits}.`;
+        else if(h.kind==="ascii") why=`${txt} in Zeile ${h.r+1} hat den ASCII-Code ${t} = ${bits} in Binär.`;
+        else if(h.kind==="dec") why=`${txt} in Zeile ${h.r+1} ist ${bits} in Binär. Zerlege die Zahl in 32, 16, 8, 4, 2, 1.`;
+        else why=`${txt} in Zeile ${h.r+1}: Jede Hex-Ziffer steht für vier Bits. Also ${bits}.`;
+        return {set,refs:[],tech:"Hinweis übersetzen",why};
+      } }
+    return null;
+  }
+  function techPair(P,g){
+    const N=P.N;
+    for(const L of lines(N)){ const v=L.cells.map(([r,c])=>g[r][c]);
+      for(let i=0;i+1<N;i++) if(v[i]!=null&&v[i]===v[i+1]){
+        for(const j of [i-1,i+2]) if(j>=0&&j<N&&v[j]==null){ const [r,c]=L.cells[j]; return {set:[[r,c,opp(v[i])]],refs:[L.cells[i],L.cells[i+1]],tech:"Zwilling",why:`In ${L.kind} ${L.i+1} stehen zwei ${nmP(v[i])} nebeneinander. Eine dritte direkt daneben wäre ein Dreier, also kommt hier eine ${nm(opp(v[i]))} hin.`}; }
+      } }
+    return null;
+  }
+  function techGap(P,g){
+    const N=P.N;
+    for(const L of lines(N)){ const v=L.cells.map(([r,c])=>g[r][c]);
+      for(let i=0;i+2<N;i++) if(v[i]!=null&&v[i]===v[i+2]&&v[i+1]==null){ const [r,c]=L.cells[i+1]; return {set:[[r,c,opp(v[i])]],refs:[L.cells[i],L.cells[i+2]],tech:"Lücke",why:`In ${L.kind} ${L.i+1} steht eine Lücke zwischen zwei ${nmP(v[i])}. Füllt man sie gleich, entsteht ein Dreier. Also muss in die Lücke eine ${nm(opp(v[i]))}.`}; } }
+    return null;
+  }
+  function techMark(P,g){
+    for(const m of P.marks||[]){ const a=g[m.a[0]][m.a[1]], b=g[m.b[0]][m.b[1]];
+      if(a!=null&&b==null) return {set:[[m.b[0],m.b[1],m.eq?a:opp(a)]],refs:[m.a],tech:"Zeichen",why:`Zwischen den beiden Zellen steht ${m.eq?"„=“, sie sind also gleich":"„≠“, sie sind also verschieden"}.`};
+      if(b!=null&&a==null) return {set:[[m.a[0],m.a[1],m.eq?b:opp(b)]],refs:[m.b],tech:"Zeichen",why:`Zwischen den beiden Zellen steht ${m.eq?"„=“, sie sind also gleich":"„≠“, sie sind also verschieden"}.`}; }
+    return null;
+  }
+  function techCount(P,g){
+    const N=P.N;
+    for(const L of lines(N)){ const v=L.cells.map(([r,c])=>g[r][c]);
+      for(const s of [0,1]) if(v.filter(x=>x===s).length===N/2&&v.some(x=>x==null)){
+        const set=L.cells.filter((_,k)=>v[k]==null).map(([r,c])=>[r,c,opp(s)]);
+        return {set,refs:L.cells.filter((_,k)=>v[k]===s),tech:"Abzählen",why:`${L.kind} ${L.i+1} hat schon ${N/2} ${nmP(s)}, mehr sind nicht erlaubt. Alle freien Felder bekommen eine ${nm(opp(s))}.`}; } }
+    return null;
+  }
+  function lineOptions(P,g,L){
+    const N=P.N, v=L.cells.map(([r,c])=>g[r][c]), empty=v.map((x,k)=>x==null?k:-1).filter(k=>k>=0);
+    const others=[]; for(let i=0;i<N;i++){ if(i===L.i) continue; const cells=[...Array(N)].map((_,k)=>L.kind==="Zeile"?[i,k]:[k,i]); const w=cells.map(([r,c])=>g[r][c]); if(w.every(x=>x!=null)) others.push(w.join("")); }
+    const opts=[];
+    for(let m=0;m<(1<<empty.length);m++){
+      const t=[...v]; empty.forEach((k,j)=>t[k]=(m>>j)&1);
+      if(t.filter(x=>x).length!==N/2) continue;
+      let ok=true; for(let i=0;i+2<N;i++) if(t[i]===t[i+1]&&t[i]===t[i+2]){ok=false;break;} if(!ok) continue;
+      if(others.includes(t.join(""))) continue;
+      for(const mk of P.marks||[]){ const ia=L.cells.findIndex(x=>x[0]===mk.a[0]&&x[1]===mk.a[1]), ib=L.cells.findIndex(x=>x[0]===mk.b[0]&&x[1]===mk.b[1]);
+        if(ia>=0&&ib>=0&&(t[ia]===t[ib])!==mk.eq){ok=false;break;}
+        if(ia>=0&&ib<0){ const o=g[mk.b[0]][mk.b[1]]; if(o!=null&&(t[ia]===o)!==mk.eq){ok=false;break;} }
+        if(ib>=0&&ia<0){ const o=g[mk.a[0]][mk.a[1]]; if(o!=null&&(t[ib]===o)!==mk.eq){ok=false;break;} } }
+      if(ok) opts.push(t);
+    }
+    return {opts,empty};
+  }
+  function techThink(P,g){
+    const N=P.N; let best=null;
+    for(const L of lines(N)){ const {opts,empty}=lineOptions(P,g,L); if(!empty.length||!opts.length) continue;
+      for(const k of empty){ const vals=new Set(opts.map(o=>o[k])); if(vals.size===1){ const val=opts[0][k]; const [r,c]=L.cells[k];
+        const cand={set:[[r,c,val]],refs:L.cells.filter((_,j)=>!empty.includes(j)),tech:"Durchdenken",
+          why:`Für ${L.kind} ${L.i+1} gibt es nur ${opts.length===1?"eine einzige gültige Möglichkeit":opts.length+" gültige Möglichkeiten"}, die zu den Regeln passen. In jeder davon steht hier eine ${nm(val)}. Tipp: Probier gedanklich das Gegenteil und schau, wo ein Dreier oder zu viele ${nmP(opp(val))} entstehen.`, n:opts.length};
+        if(!best||cand.n<best.n) best=cand; } } }
+    return best;
+  }
+  const TECHS=[techHint,techPair,techGap,techMark,techCount,techThink];
+  function deduce(P,g){ for(const t of TECHS){ const d=t(P,g); if(d) return d; } return null; }
+  function startGrid(P){ const g=[...Array(P.N)].map(()=>Array(P.N).fill(null)); for(const [r,c] of P.givens) g[r][c]=bit(P.sol[r],P.N,c); return g; }
+  function solveLogic(P,maxTech=99){
+    const g=startGrid(P); const used={};
+    for(let it=0;it<500;it++){
+      if(g.every(r=>r.every(x=>x!=null))) return {ok:true,used};
+      let d=null; for(let i=0;i<TECHS.length&&i<=maxTech;i++){ d=TECHS[i](P,g); if(d) break; }
+      if(!d) return {ok:false,used};
+      used[d.tech]=(used[d.tech]||0)+1;
+      for(const [r,c,v] of d.set){ if(v!==bit(P.sol[r],P.N,c)) return {ok:false,used,wrong:true}; g[r][c]=v; }
+    }
+    return {ok:false,used};
+  }
+  return {bit,lines,hintText,hintMask,rgbOf,errors,deduce,startGrid,solveLogic};
+})();
+if(typeof module!=="undefined" && typeof document==="undefined") module.exports=BS;
+
+const META={
+ 1:{t:"Die drei Regeln",i:"Willkommen! Fülle das Raster mit Nullen und Einsen. Die Regeln findest du unten. Fang dort an, wo zwei gleiche Ziffern nebeneinanderstehen."},
+ 2:{t:"Weniger Vorgaben",i:"<b>Neu: Durchdenken.</b> Manchmal reicht ein Blick nicht. Dann spiel eine Zeile gedanklich durch: Was passiert, wenn hier eine 1 stünde?"},
+ 3:{t:"Hex-Hinweise",i:"<b>Neu: Hex.</b> Drei Zeilen sind nur als Hex-Zahl angegeben. Jede Hex-Ziffer steht für vier Bits. Bei sechs Bits heißt 0x2C also 10 1100."},
+ 4:{t:"Dezimal und halbe Hex",i:"<b>Neu: 8×8.</b> Zwei Zeilen sind als Dezimalzahl angegeben. Andere verraten nur eine Hex-Ziffer: 0x?C heißt, die rechten vier Bits sind 1100."},
+ 5:{t:"Gleich und verschieden",i:"<b>Neu: Zeichen.</b> Ein = zwischen zwei Zellen heißt, sie sind gleich. Ein × heißt, sie sind verschieden.",x:"= heißt gleich, × heißt verschieden."},
+ 6:{t:"ASCII und Geheimnachricht",i:"<b>Neu: ASCII.</b> Drei Zeilen sind als Buchstabe angegeben. Großbuchstaben beginnen mit 010, Kleinbuchstaben mit 011. Außerdem ist dein Raster der Schlüssel zu einer Geheimnachricht: Jede fertige Zeile XOR ihr Schlüsselbyte ergibt einen Buchstaben."},
+ 7:{t:"Das Geheimbild",i:"<b>Neu: Verschlüsseltes Bild.</b> Ein Bild wurde mit der Lösung per XOR verschlüsselt. Jede Zelle, die du füllst, entschlüsselt einen Pixel. Erkennst du das Motiv, hilft es dir sogar beim Lösen."},
+ 8:{t:"Farbcodes",i:"<b>Neu: RGB.</b> Drei Zeilen sind als Farbe angegeben. Je zwei Bits pro Kanal, in der Reihenfolge Rot, Grün, Blau: 00 aus, 01 schwach, 10 mittel, 11 voll. Die drei Balken im Feld zeigen die Stärke der Kanäle.",x:"Farbe = RRGGBB, je zwei Bits pro Kanal."}
+};
+const $=id=>document.getElementById(id);
+const hex2=v=>v.toString(16).toUpperCase().padStart(2,"0");
+let progress={}; try{progress=JSON.parse(localStorage.getItem("binaersudoku")||"{}")}catch(e){}
+const save=()=>{try{localStorage.setItem("binaersudoku",JSON.stringify(progress))}catch(e){}};
+const S={li:0,g:null,hist:[],hinted:false,violated:false,tip:null,solved:false,moves:0};
+const P=()=>LEVELS[S.li];
+
+function load(i){
+  S.li=i; S.g=BS.startGrid(P()); S.hist=[]; S.hinted=false; S.violated=false; S.tip=null; S.solved=false; S.moves=0; S.last=null;
+  $("won").hidden=true; render();
+}
+const isGiven=(r,c)=>P().givens.some(([a,b])=>a===r&&b===c);
+
+function renderLevels(){
+  $("levels").innerHTML=LEVELS.map((L,i)=>{const s=progress[L.id]||0;return `<button class="lv" aria-pressed="${i===S.li}" data-i="${i}" title="${META[L.id].t}"><b>${i+1}</b><small>${"★".repeat(s)}${"☆".repeat(3-s)}</small></button>`;}).join("");
+}
+function render(){
+  const L=P(), m=META[L.id];
+  renderLevels();
+  $("eyebrow").textContent=`Level ${S.li+1} von ${LEVELS.length} · ${L.N}×${L.N}`;
+  $("title").textContent=m.t; $("intro").innerHTML=m.i;
+  $("ruleExtra").hidden=!m.x; $("ruleExtra").textContent=m.x||"";
+  renderBoard(); renderSecret(); renderTip();
+  $("undoBtn").disabled=!S.hist.length;
+}
+function cellSize(L){
+  const side=(L.hints&&L.hints.length)?(L.hints.some(h=>h.kind==="rgb")?54:64):0, gap=L.N>6?5:6;
+  return {cs:`min(${L.N>6?46:56}px, calc((100cqw - ${side+gap*(L.N+1)+10}px) / ${L.N}))`,gap:gap+"px"};
+}
+function renderBoard(){
+  const L=P(), N=L.N, g=S.g, bad=$("optErr").checked?BS.errors(L,g):new Set();
+  const {cs,gap}=cellSize(L), bw=$("board");
+  bw.style.setProperty("--cs",cs); bw.style.setProperty("--gap",gap); bw.style.gridTemplateColumns=`repeat(${N},var(--cs))`;
+  $("hints").style.setProperty("--cs",cs); $("hints").style.setProperty("--gap",gap);
+  const tgt=new Set(), ref=new Set(), wrong=new Set();
+  if(S.tip){ (S.tip.set||[]).forEach(([r,c])=>tgt.add(r+","+c)); (S.tip.refs||[]).forEach(([r,c])=>ref.add(r+","+c)); if(S.tip.wrong) wrong.add(S.tip.wrong.join(",")); }
+  let html="";
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+    const v=g[r][c], k=r+","+c, giv=isGiven(r,c);
+    html+=`<button class="cell${v==null?"":" v"+v}${giv?" given":""}${bad.has(k)?" err":""}${tgt.has(k)?" tgt":""}${ref.has(k)?" ref":""}${wrong.has(k)?" wrong":""}" style="--i:${r+c}" data-r="${r}" data-c="${c}" ${giv?"disabled":""} aria-label="Zeile ${r+1}, Spalte ${c+1}: ${v==null?"leer":v}${giv?", vorgegeben":""}">${v==null?"":v}</button>`;
+  }
+  for(const mk of L.marks||[]){
+    const [r1,c1]=mk.a,[r2,c2]=mk.b, hor=r1===r2;
+    const x=hor?`calc(var(--gap) + ${Math.max(c1,c2)} * (var(--cs) + var(--gap)) - var(--gap) / 2)`:`calc(var(--gap) + ${c1} * (var(--cs) + var(--gap)) + var(--cs) / 2)`;
+    const y=hor?`calc(var(--gap) + ${r1} * (var(--cs) + var(--gap)) + var(--cs) / 2)`:`calc(var(--gap) + ${Math.max(r1,r2)} * (var(--cs) + var(--gap)) - var(--gap) / 2)`;
+    html+=`<span class="mark" style="left:${x};top:${y}" aria-hidden="true">${mk.eq?"=":"×"}</span>`;
+  }
+  bw.innerHTML=html; bw.classList.toggle("solved",S.solved);
+  // Zeilenhinweise
+  const hs=L.hints||[];
+  $("hints").hidden=!hs.length;
+  if(hs.length){
+    let h="";
+    for(let r=0;r<N;r++){
+      const hint=hs.find(x=>x.r===r); if(!hint){ h+=`<div class="hint"></div>`; continue; }
+      const t=L.sol[r], m=BS.hintMask(hint,N), row=g[r], full=row.every(v=>v!=null);
+      let ok=null; if(row.every((v,c)=>!((m>>(N-1-c))&1)||v!=null)) ok=row.every((v,c)=>!((m>>(N-1-c))&1)||v===BS.bit(t,N,c));
+      if(hint.kind==="rgb"){ const lv=[(t>>4)&3,(t>>2)&3,t&3]; h+=`<div class="hint"><span class="sw" style="background:${BS.rgbOf(t)}" title="Farbe">${lv.map(x=>`<i style="height:${4+x*5}px"></i>`).join("")}</span></div>`; }
+      else h+=`<div class="hint${ok===true?" ok":ok===false?" bad":""}">${BS.hintText(hint,t,N)}</div>`;
+    }
+    $("hints").innerHTML=h;
+  }
+}
+function renderSecret(){
+  const L=P(), N=L.N, g=S.g, sec=$("secret"), rv=L.reveal;
+  if(!rv&&!S.solved){ sec.hidden=true; return; }
+  if(!rv&&S.solved&&L.hints.some(h=>h.kind==="rgb")){
+    sec.hidden=false; sec.innerHTML=`<div class="label">Deine Farbpalette</div><div class="palette">${L.sol.map(v=>`<span style="background:${BS.rgbOf(v)}" title="${v.toString(2).padStart(6,"0")}"></span>`).join("")}</div>`; return; }
+  if(!rv){ sec.hidden=true; return; }
+  sec.hidden=false;
+  if(rv.type==="text"){
+    sec.innerHTML=`<div class="label">Geheimnachricht</div><div class="keys">${rv.key.map((k,r)=>{const row=g[r],full=row.every(v=>v!=null);const val=full?parseInt(row.join(""),2):null;const ch=full?String.fromCharCode(val^k):"·";const shown=full&&/[ -~]/.test(ch)?ch:"·";
+      return `<div class="kt${full?" open":""}"><small>0x${hex2(k)}</small><span>${shown}</span></div>`;}).join("")}</div><div class="stat">Zeile XOR Schlüssel = Buchstabe</div>`;
+  } else {
+    let px=""; for(let r=0;r<N;r++) for(let c=0;c<N;c++){ const cb=(rv.cipher[r]>>(N-1-c))&1, v=g[r][c];
+      px+= v==null ? `<b class="${cb?"noise":""}"></b>` : `<b class="${(cb^v)?"on":""}"></b>`; }
+    sec.innerHTML=`<div class="label">Verschlüsseltes Bild</div><div class="pix">${px}</div><div class="stat">Bildpixel XOR deine Zelle = echter Pixel</div>`;
+  }
+}
+function renderTip(){
+  const t=$("tip"); if(!S.tip){ t.hidden=true; return; }
+  t.hidden=false;
+  t.innerHTML=`<b>${S.tip.tech}</b><p>${S.tip.why}</p>${S.tip.set&&S.tip.set.length?`<div class="actions"><button class="btn primary" id="apply">Eintragen</button><button class="btn" id="close">Selbst machen</button></div>`:`<div class="actions"><button class="btn" id="close">Okay</button></div>`}`;
+  if($("apply")) $("apply").onclick=()=>{ push(); for(const [r,c,v] of S.tip.set) S.g[r][c]=v; S.tip=null; S.moves++; after(); };
+  $("close").onclick=()=>{ S.tip=null; render(); };
+}
+function push(){ S.hist.push(S.g.map(r=>[...r])); }
+function after(){
+  const L=P(), N=L.N;
+  if(S.g.every((row,r)=>row.every((v,c)=>v===BS.bit(L.sol[r],N,c)))){ if(BS.errors(L,S.g).size) S.violated=true; S.solved=true; render(); setTimeout(showWin,700); return; }
+  render();
+}
+function tap(r,c){
+  if(S.solved||isGiven(r,c)) return;
+  if(S.last&&S.last!==r+","+c&&BS.errors(P(),S.g).size) S.violated=true;
+  S.last=r+","+c;
+  push(); const v=S.g[r][c]; S.g[r][c]= v==null?0 : v===0?1 : null; S.moves++;
+  if(S.tip) S.tip=null;
+  after();
+}
+function hint(){
+  if(S.solved) return;
+  const L=P(), N=L.N; S.hinted=true; if(BS.errors(L,S.g).size) S.violated=true;
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++){ const v=S.g[r][c]; if(v!=null&&v!==BS.bit(L.sol[r],N,c)){
+    S.tip={tech:"Hier stimmt etwas nicht",why:`Die markierte Zelle in Zeile ${r+1}, Spalte ${c+1} passt nicht zur Lösung. Vielleicht war hier ein Schritt zu schnell. Ändere sie und schau dir die Zeile noch einmal an.`,wrong:[r,c],set:[]}; return render(); } }
+  const d=BS.deduce(L,S.g);
+  S.tip=d||{tech:"Kein Tipp",why:"Hier finde ich gerade keinen logischen Schritt.",set:[]};
+  render();
+}
+function showWin(){
+  const L=P(), stars=1+(!S.hinted?1:0)+(!S.violated?1:0);
+  progress[L.id]=Math.max(stars,progress[L.id]||0); save(); renderLevels();
+  const last=S.li===LEVELS.length-1;
+  const extra=L.reveal?.type==="text"?`Die Nachricht lautet <b>${L.reveal.word}</b>.`:L.reveal?.type==="image"?`Das Bild ist entschlüsselt.`:L.hints?.some(h=>h.kind==="rgb")?`Jede Zeile ist eine Farbe, siehe Palette.`:``;
+  $("won").innerHTML=`<h3>Gelöst!</h3><div class="stars">${[0,1,2].map(i=>`<span class="${i<stars?"":"off"}">★</span>`).join("")}</div>
+    <ul><li class="got">★ Raster gelöst</li><li class="${!S.hinted?"got":""}">★ ohne Tipp</li><li class="${!S.violated?"got":""}">★ ohne Regelverstoß</li></ul>
+    ${extra?`<p>${extra}</p>`:""}
+    <div class="actions"><button class="btn" id="look">Raster ansehen</button><button class="btn" id="again">Nochmal</button>${last?"":`<button class="btn primary" id="next">Nächstes Level</button>`}</div>`;
+  $("won").hidden=false;
+  $("look").onclick=()=>{ $("won").hidden=true; };
+  $("again").onclick=()=>load(S.li);
+  if(!last){ $("next").onclick=()=>load(S.li+1); $("next").focus(); }
+}
+$("board").addEventListener("click",e=>{const b=e.target.closest(".cell");if(b)tap(+b.dataset.r,+b.dataset.c);});
+$("levels").addEventListener("click",e=>{const b=e.target.closest(".lv");if(b)load(+b.dataset.i);});
+$("hintBtn").onclick=hint;
+$("undoBtn").onclick=()=>{ if(!S.hist.length||S.solved) return; S.g=S.hist.pop(); S.tip=null; render(); };
+$("resetBtn").onclick=()=>load(S.li);
+$("optErr").onchange=()=>renderBoard();
+$("wipe").onclick=()=>{progress={};save();renderLevels();};
+load(0);
+
+</script>
+</body>
+</html>
