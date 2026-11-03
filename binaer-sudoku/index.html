@@ -5,17 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Binär-Sudoku</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;600;800&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-/* Layout: ein ruhiges Spielbrett im Zentrum, Levelleiste darüber, Tipp-Box und Geheimnis-Panel darunter.
-   Bewusst ein dunkles Thema: Nullen kühl, Einsen warm, beide leuchten auf dunklem Grund. */
+/* Layout: schmale Terminal-Spalte wie bei Reboot BYTE. Levelleiste, Platine mit LED-Raster, Tipp als Sprechblase.
+   Grüner Phosphor auf fast Schwarz, Bernstein als Akzent; 1 = LED leuchtet, 0 = LED aus. */
 :root{
   color-scheme: dark;
-  --ink:#0e1120; --panel:#161a2d; --panel2:#1d2240; --tile:#232946; --line:#2c3256;
-  --fg:#eceaf6; --muted:#8f93b5; --zero:#4fd1c5; --one:#ffb547; --acc:#b9a4ff;
-  --ok:#5ee0a0; --bad:#ff6b7a;
-  --f-display:"Martian Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --f-body:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ink:#070B08; --panel:#0C140E; --panel2:#101C14; --tile:#12201A; --line:#1A3322;
+  --fg:#B8F5C8; --muted:#5E9A6E; --zero:#5E9A6E; --one:#3DFF7A; --acc:#FFB000;
+  --ok:#3DFF7A; --bad:#FF5252; --off:#12201A; --glow:#3DFF7A55;
+  --f-display:"VT323", "Courier New", monospace;
+  --f-body:"IBM Plex Mono", ui-monospace, "Courier New", monospace;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -110,6 +110,66 @@ details.rules ul{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:co
 .won p{margin:0;max-width:40ch;color:var(--fg)}
 footer{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 footer button{background:none;border:none;color:var(--muted);text-decoration:underline;padding:0;font-size:12px}
+
+/* ---- Reboot-BYTE-Look ---- */
+body{font-size:14px;background-color:var(--ink);background-image:repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px), radial-gradient(var(--line) 1px, transparent 1.5px);background-size:100% 3px, 22px 22px}
+.wrap{max-width:540px;gap:14px}
+h1{font-family:var(--f-display);font-weight:400;font-size:36px;letter-spacing:.04em;color:var(--acc);text-shadow:0 0 10px #FFB00055}
+h1 .o{color:inherit}
+.toggle{font-family:var(--f-display);font-size:18px}
+.lv{border-radius:6px;padding:4px 2px 2px}
+.lv b{font-family:var(--f-display);font-size:22px;font-weight:400;color:var(--muted);line-height:1}
+.lv small{font-size:12px;color:var(--acc)}
+.lv[aria-pressed="true"]{border-color:var(--one);background:var(--panel);box-shadow:0 0 12px color-mix(in srgb,var(--one) 30%,transparent)}
+.lv[aria-pressed="true"] b{color:var(--one)}
+.card{border-radius:8px;padding:16px 12px}
+.lhead h2{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1;color:var(--one);text-shadow:0 0 10px var(--glow)}
+.eyebrow{font-family:var(--f-display);font-size:17px;letter-spacing:.1em}
+.stat{font-family:var(--f-display);font-size:17px}
+.intro{font-family:var(--f-display);font-size:20px;line-height:1.15;background:var(--panel);border:1px solid var(--one);border-left:1px solid var(--one);border-radius:6px}
+.intro b{color:var(--acc);font-weight:400}
+details.rules{font-size:13px}
+details.rules summary{font-family:var(--f-display);font-size:19px;letter-spacing:.05em}
+.board{background:#050806;border-radius:8px}
+.cell{border-radius:50%;border:1px solid var(--line);background:var(--off);box-shadow:none;font-family:var(--f-display);font-weight:400;font-size:calc(var(--cs) * .62);line-height:1;color:var(--muted)}
+.cell.v0{background:var(--off);color:var(--muted);border:2px solid color-mix(in srgb,var(--one) 40%,var(--line))}
+.cell.v1{background:var(--one);border-color:var(--one);color:#03200d;box-shadow:0 0 10px var(--one), inset 0 0 6px #ffffff66}
+.cell.given{box-shadow:0 0 0 2px var(--panel), 0 0 0 3px var(--acc)}
+.cell.given.v0{background:var(--off)}
+.cell.given.v1{background:var(--one);box-shadow:0 0 0 2px var(--panel), 0 0 0 3px var(--acc), 0 0 12px var(--one)}
+.cell.err{background:var(--off);color:var(--bad);border:2px solid var(--bad);animation:flick 2.6s infinite steps(1)}
+.cell.err.v1{background:var(--bad);color:#2a0606;box-shadow:0 0 10px var(--bad)}
+.cell.tgt{outline:3px solid var(--acc);outline-offset:2px;animation:tipblink 1s steps(2) infinite;box-shadow:none}
+.cell.ref{outline:2px dashed var(--acc);outline-offset:1px}
+.cell.wrong{outline:3px solid var(--bad);outline-offset:2px;animation:tipblink 1s steps(2) infinite}
+@keyframes tipblink{50%{outline-color:transparent}}
+@keyframes flick{0%,92%{opacity:1}94%{opacity:.35}96%{opacity:1}98%{opacity:.5}}
+.mark{background:var(--ink);border-color:var(--acc);color:var(--acc);font-family:var(--f-display);font-size:16px;font-weight:400}
+.hint{font-family:var(--f-display);font-size:22px;font-weight:400;color:var(--fg)}
+.hint.ok{color:var(--one);text-shadow:0 0 8px var(--glow)}
+.chint{font-family:var(--f-display);font-weight:400;font-size:max(13px, calc(var(--cs) * .4));color:var(--fg);white-space:nowrap;word-break:normal;overflow:visible}
+.chint.ok{color:var(--one);text-shadow:0 0 8px var(--glow)}
+.sw{border-radius:4px}
+.tipbox{background:var(--panel);border:1px solid var(--one);border-radius:6px}
+.tipbox b{font-family:var(--f-display);font-weight:400;font-size:22px;color:var(--one)}
+.tipbox p{font-family:var(--f-display);font-size:20px;line-height:1.15}
+.btn{font-family:var(--f-display);font-weight:400;font-size:20px;letter-spacing:.04em;border-radius:6px;background:var(--panel);color:var(--fg);min-height:44px;padding:4px 14px}
+.btn.primary{background:var(--ink);color:var(--acc);border:1px solid var(--acc);box-shadow:0 0 8px #FFB00033}
+.secret{background:#050806;border-radius:8px}
+.secret .label{font-family:var(--f-display);font-size:18px;letter-spacing:.1em}
+.kt{border-radius:4px;background:var(--panel)}
+.kt small{font-size:11px}
+.kt span{font-family:var(--f-display);font-size:28px;font-weight:400}
+.kt.open{border-color:var(--one)} .kt.open span{color:var(--one);text-shadow:0 0 8px var(--glow)}
+.pix b{border-radius:2px}
+.pix b.on{background:var(--one);box-shadow:0 0 8px var(--glow)}
+.won h3{font-family:var(--f-display);font-weight:400;font-size:44px;color:var(--one);text-shadow:0 0 12px var(--glow)}
+.stars{color:var(--acc)}
+.won ul{font-family:var(--f-display);font-size:20px}
+.won p{font-family:var(--f-display);font-size:20px;line-height:1.15}
+.won p b{color:var(--acc);font-weight:400}
+footer{font-family:var(--f-display);font-size:16px}
+footer button{font-size:16px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
