@@ -10,7 +10,7 @@ Alles steckt in einer Datei (`index.html`), ohne Build-Schritt. Spielstand und S
 
 Zweiter Prototyp: ein Binär-Sudoku mit 52 Bitten von sechs Robotern (Schwierigkeitsstufe 1–5) (Hex-, Oktal-, Dezimal-, ASCII- und Farbhinweise an Zeilen und Spalten, 6×6 bis 10×10, Gleich/Verschieden-Zeichen, Geheimnachricht und Geheimbild per XOR) und Tipps, die den nächsten Logikschritt erklären.
 
-Mit Werkstatt (die sechs Roboter bitten um Hilfe und wachen nach und nach auf), Sammelalbum und täglichem Rätsel nach Dienstplan.
+Mit Nachtschicht-Modus (Roguelite: Karte mit acht Etagen, Akku, Bits, Module, Flüche, Hauptrechner als Boss), Werkstatt (die sechs Roboter bitten um Hilfe und wachen nach und nach auf), Sammelalbum und täglichem Rätsel nach Dienstplan.
 
 Spielen: https://b31g3l.github.io/Reboot-Byte-Prototype/binaer-sudoku/
 
