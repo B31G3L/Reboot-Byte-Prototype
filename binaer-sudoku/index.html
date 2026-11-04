@@ -142,9 +142,16 @@ details.rules summary{font-family:var(--f-display);font-size:19px;letter-spacing
 .cell{border-radius:50%;border:1px solid var(--line);background:var(--off);box-shadow:none;font-family:var(--f-display);font-weight:400;font-size:calc(var(--cs) * .62);line-height:1;color:var(--muted)}
 .cell.v0{background:var(--off);color:var(--muted);border:2px solid color-mix(in srgb,var(--one) 40%,var(--line))}
 .cell.v1{background:var(--one);border-color:var(--one);color:#03200d;box-shadow:0 0 10px var(--one), inset 0 0 6px #ffffff66}
-.cell.given{box-shadow:0 0 0 2px var(--panel), 0 0 0 3px var(--acc)}
-.cell.given.v0{background:var(--off)}
-.cell.given.v1{background:var(--one);box-shadow:0 0 0 2px var(--panel), 0 0 0 3px var(--acc), 0 0 12px var(--one)}
+.cell.given{cursor:default}
+.cell.given:disabled{opacity:1}
+.cell.given.v0{background:#0a1410;border:2px solid color-mix(in srgb,var(--one) 25%,var(--line));color:color-mix(in srgb,var(--one) 45%,var(--muted))}
+.cell.given.v1{background:color-mix(in srgb,var(--one) 70%,#000);border-color:color-mix(in srgb,var(--one) 70%,#000);box-shadow:inset 0 2px 0 rgba(255,255,255,.18), inset 0 -3px 0 rgba(0,0,0,.35);color:#02180a}
+.cell{touch-action:none;user-select:none;-webkit-user-select:none}
+.cell.press{transform:scale(.92)}
+.hint.rv,.chint.rv{color:var(--muted)}
+.hint.rv.bad,.chint.rv.bad{color:var(--bad);text-shadow:0 0 8px #FF525255}
+.hint.bad,.chint.bad{color:var(--bad)}
+.sw.dupsw{outline:2px solid var(--bad);outline-offset:2px}
 .cell.err{background:var(--off);color:var(--bad);border:2px solid var(--bad);animation:flick 2.6s infinite steps(1)}
 .cell.err.v1{background:var(--bad);color:#2a0606;box-shadow:0 0 10px var(--bad)}
 .cell.tgt{outline:3px solid var(--acc);outline-offset:2px;animation:tipblink 1s steps(2) infinite;box-shadow:none}
@@ -254,6 +261,8 @@ footer button{font-size:16px}
       <li>Jede Zelle bekommt eine 0 oder eine 1.</li>
       <li>Nie drei gleiche Ziffern direkt nebeneinander oder untereinander.</li>
       <li>Jede Zeile und jede Spalte hat gleich viele Nullen und Einsen.</li>
+      <li>Volle Zeilen und Spalten zeigen ihren Wert als Dezimalzahl. Zwei gleiche Werte werden rot.</li>
+      <li>Bedienung: nach oben wischen = 1, nach unten = 0, tippen wechselt. Mit Tastatur: ↑, ↓ oder 1, 0.</li>
       <li>Keine zwei Zeilen sind gleich, keine zwei Spalten sind gleich.</li>
       <li id="ruleExtra" hidden></li>
     </ul></details>
@@ -266,7 +275,7 @@ footer button{font-size:16px}
         <button class="btn" id="undoBtn">Rückgängig</button>
         <button class="btn" id="resetBtn">Neu starten</button>
       </div>
-      <span class="stat">Antippen: leer → 0 → 1</span>
+      <span class="stat">Wischen: ↑ = 1 · ↓ = 0 · Tippen wechselt</span>
     </div>
     <div class="won" id="won" hidden></div>
   </section>
@@ -593,7 +602,7 @@ function render(){
   $("undoBtn").disabled=!S.hist.length;
 }
 function cellSize(L){
-  const rh=(L.hints||[]).filter(h=>h.r!=null), side=rh.length?(rh.some(h=>h.kind==="rgb")?54:64):0, gap=L.N>8?4:L.N>6?5:6;
+  const rh=(L.hints||[]).filter(h=>h.r!=null), side=rh.length?(rh.some(h=>h.kind==="rgb")?54:64):(L.N>8?50:42), gap=L.N>8?4:L.N>6?5:6;
   return {cs:`min(${L.N>8?40:L.N>6?46:56}px, calc((100cqw - ${side+gap*(L.N+1)+10}px) / ${L.N}))`,gap:gap+"px"};
 }
 function renderBoard(){
@@ -618,20 +627,26 @@ function renderBoard(){
   const hs=L.hints||[];
   const okOf=h=>{ const m=BS.hintMask(h,N), t=BS.hVal(L,h), cl=BS.hCells(h,N); if(!cl.every(([r,c],k)=>!((m>>(N-1-k))&1)||g[r][c]!=null)) return null; return cl.every(([r,c],k)=>!((m>>(N-1-k))&1)||g[r][c]===BS.bit(t,N,k)); };
   const rh=hs.filter(x=>x.r!=null), ch=hs.filter(x=>x.c!=null);
-  $("hints").hidden=!rh.length;
-  if(rh.length){
-    let h="";
-    for(let r=0;r<N;r++){
-      const hint=rh.find(x=>x.r===r); if(!hint){ h+=`<div class="hint"></div>`; continue; }
+  const rv=[...Array(N)].map((_,r)=>g[r].every(v=>v!=null)?parseInt(g[r].join(""),2):null);
+  const cv=[...Array(N)].map((_,c)=>g.every(row=>row[c]!=null)?parseInt(g.map(row=>row[c]).join(""),2):null);
+  const dup=arr=>new Set(arr.filter((v,i)=>v!=null&&arr.indexOf(v)!==i));
+  const dR=dup(rv), dC=dup(cv);
+  $("hints").hidden=false;
+  let h="";
+  for(let r=0;r<N;r++){
+    const hint=rh.find(x=>x.r===r), d=rv[r]!=null&&dR.has(rv[r]);
+    if(hint){
       const t=BS.hVal(L,hint), ok=okOf(hint);
-      if(hint.kind==="rgb"){ const lv=[(t>>4)&3,(t>>2)&3,t&3]; h+=`<div class="hint"><span class="sw" style="background:${BS.rgbOf(t)}" title="Farbe">${lv.map(x=>`<i style="height:${4+x*5}px"></i>`).join("")}</span></div>`; }
-      else h+=`<div class="hint${ok===true?" ok":ok===false?" bad":""}">${BS.hintText(hint,t,N)}</div>`;
-    }
-    $("hints").innerHTML=h;
+      if(hint.kind==="rgb"){ const lv=[(t>>4)&3,(t>>2)&3,t&3]; h+=`<div class="hint"><span class="sw${d?" dupsw":""}" style="background:${BS.rgbOf(t)}" title="Farbe">${lv.map(x=>`<i style="height:${4+x*5}px"></i>`).join("")}</span></div>`; }
+      else h+=`<div class="hint${d?" bad":ok===true?" ok":ok===false?" bad":""}">${BS.hintText(hint,t,N)}</div>`;
+    } else h+= rv[r]==null ? `<div class="hint"></div>` : `<div class="hint rv${d?" bad":""}" title="${d?"Diese Zeile gibt es doppelt":"Wert der Zeile"}">${rv[r]}</div>`;
   }
-  const cbox=$("chints"); cbox.hidden=!ch.length;
+  $("hints").innerHTML=h;
+  const cbox=$("chints"); cbox.hidden=false;
   cbox.style.setProperty("--cs",cs); cbox.style.setProperty("--gap",gap); cbox.style.gridTemplateColumns=`repeat(${N},var(--cs))`;
-  if(ch.length) cbox.innerHTML=[...Array(N)].map((_,c)=>{const hint=ch.find(x=>x.c===c); if(!hint) return `<div class="chint"></div>`; const ok=okOf(hint); return `<div class="chint${ok===true?" ok":ok===false?" bad":""}">${BS.hintText(hint,BS.hVal(L,hint),N)}</div>`;}).join("");
+  cbox.innerHTML=[...Array(N)].map((_,c)=>{const hint=ch.find(x=>x.c===c), d=cv[c]!=null&&dC.has(cv[c]);
+    if(hint){ const ok=okOf(hint); return `<div class="chint${d?" bad":ok===true?" ok":ok===false?" bad":""}">${BS.hintText(hint,BS.hVal(L,hint),N)}</div>`; }
+    return cv[c]==null?`<div class="chint"></div>`:`<div class="chint rv${d?" bad":""}" title="${d?"Diese Spalte gibt es doppelt":"Wert der Spalte"}">${cv[c]}</div>`;}).join("");
 }
 function renderSecret(){
   const L=P(), N=L.N, g=S.g, sec=$("secret"), rv=L.reveal;
@@ -662,14 +677,17 @@ function after(){
   if(S.g.every((row,r)=>row.every((v,c)=>v===BS.bit(L.sol[r],N,c)))){ if(BS.errors(L,S.g).size) S.violated=true; S.solved=true; render(); setTimeout(showWin,700); return; }
   render();
 }
-function tap(r,c){
+function setCell(r,c,nv){
   if(S.solved||isGiven(r,c)) return;
+  if(S.g[r][c]===nv) return;
   if(S.last&&S.last!==r+","+c&&BS.errors(P(),S.g).size) S.violated=true;
   S.last=r+","+c;
-  push(); const v=S.g[r][c]; S.g[r][c]= v==null?0 : v===0?1 : null; S.moves++;
+  push(); S.g[r][c]=nv; S.moves++;
   if(S.tip) S.tip=null;
   after();
+  const b=document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`); if(b) b.focus({preventScroll:true});
 }
+function tap(r,c){ const v=S.g[r][c]; setCell(r,c, v==null?0 : v===0?1 : null); }
 function hint(){
   if(S.solved) return;
   const L=P(), N=L.N; S.hinted=true; if(BS.errors(L,S.g).size) S.violated=true;
@@ -699,7 +717,18 @@ function showWin(){
   if(nxt){ $("home").insertAdjacentHTML("beforebegin",`<button class="btn" id="nextBtn">Nächste Bitte von ${L.bot}</button>`); $("nextBtn").onclick=()=>play(nxt); }
   $("home").onclick=()=>show(L.daily?"daily":"hub"); $("home").focus();
 }
-$("board").addEventListener("click",e=>{const b=e.target.closest(".cell");if(b)tap(+b.dataset.r,+b.dataset.c);});
+// Wischen: hoch = 1, runter = 0, kurz tippen = wechseln
+let SW=null;
+$("board").addEventListener("pointerdown",e=>{const b=e.target.closest(".cell"); if(!b||b.disabled) return; SW={r:+b.dataset.r,c:+b.dataset.c,x:e.clientX,y:e.clientY,id:e.pointerId}; b.classList.add("press");});
+const endSwipe=e=>{ if(!SW||e.pointerId!==SW.id) return; const s=SW; SW=null;
+  document.querySelectorAll(".cell.press").forEach(x=>x.classList.remove("press"));
+  if(e.type==="pointercancel") return;
+  const dx=e.clientX-s.x, dy=e.clientY-s.y;
+  if(Math.abs(dy)>=18&&Math.abs(dy)>Math.abs(dx)) setCell(s.r,s.c, dy<0?1:0); else if(Math.abs(dx)<12&&Math.abs(dy)<12) tap(s.r,s.c); };
+window.addEventListener("pointerup",endSwipe); window.addEventListener("pointercancel",endSwipe);
+$("board").addEventListener("click",e=>{ if(e.detail!==0) return; const b=e.target.closest(".cell"); if(b) tap(+b.dataset.r,+b.dataset.c); });
+$("board").addEventListener("keydown",e=>{ const b=e.target.closest(".cell"); if(!b) return; const r=+b.dataset.r,c=+b.dataset.c;
+  const k={ArrowUp:1,"1":1,ArrowDown:0,"0":0,Backspace:null,Delete:null}; if(e.key in k){ e.preventDefault(); setCell(r,c,k[e.key]); } });
 $("hub").addEventListener("click",e=>{const b=e.target.closest(".lvdot");if(b&&!b.disabled)play(lvById(+b.dataset.id));});
 $("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(b)show(b.dataset.v);});
 $("backBtn").onclick=()=>show(P()?.daily?"daily":"hub");
