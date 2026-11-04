@@ -325,7 +325,6 @@ footer button{font-size:16px}
       <li>Jede Zelle bekommt eine 0 oder eine 1.</li>
       <li>Nie drei gleiche Ziffern direkt nebeneinander oder untereinander.</li>
       <li>Jede Zeile und jede Spalte hat gleich viele Nullen und Einsen.</li>
-      <li>Volle Zeilen und Spalten zeigen ihren Wert als Dezimalzahl. Zwei gleiche Werte werden rot.</li>
       <li>Bedienung: nach oben wischen = 1, nach unten = 0, tippen wechselt. Mit Tastatur: ↑, ↓ oder 1, 0.</li>
       <li>Keine zwei Zeilen sind gleich, keine zwei Spalten sind gleich.</li>
       <li id="ruleExtra" hidden></li>
@@ -530,7 +529,7 @@ function makeDaily(d){
 
 // ===== Meta-Fortschritt: Freischaltung, Einführungen, Ersatzteile, Album =====
 const TUT={BYTE:[1,100,2,101,5],HEXA:[3,107,108,4],OKTA:[9,114,116],ASKI:[6,120,121],PIXA:[7,127,128],CHROMA:[8,134,136]};
-const BRINGS={BYTE:"Binär, Dezimalwerte und die Zeichen = und ×",HEXA:"Hex-Hinweise",OKTA:"Oktal-Hinweise",ASKI:"Buchstaben-Hinweise und Geheimnachrichten",PIXA:"Geheimbilder",CHROMA:"Farbhinweise"};
+const BRINGS={BYTE:"Binär und die Zeichen = und ×",HEXA:"Hex-Hinweise",OKTA:"Oktal-Hinweise",ASKI:"Buchstaben-Hinweise und Geheimnachrichten",PIXA:"Geheimbilder",CHROMA:"Farbhinweise"};
 const WAKE_TXT={BYTE:"BYTE fährt hoch …",HEXA:"HEXA ist aufgewacht!",OKTA:"OKTA ist aufgewacht!",ASKI:"ASKI ist aufgewacht!",PIXA:"PIXA ist aufgewacht!",CHROMA:"CHROMA ist aufgewacht!"};
 const WAKE_SAY={BYTE:"Hallo! Ich bin BYTE. Bevor wir in die Nachtschicht gehen, zeige ich dir kurz, wie die Raster funktionieren.",
   HEXA:"Endlich jemand, der weit genug gekommen ist. Ich bringe dir Hex bei. Trivial, versprochen.",
@@ -661,7 +660,7 @@ const MODS={
   diag:{n:"Diagnose",d:"Jedes Rätsel startet mit 3 zusätzlichen Vorgaben."}
 };
 const CURSES={
-  stille:{n:"Stille",d:"Volle Zeilen und Spalten zeigen keinen Wert."},
+  dunkel:{n:"Stromausfall",d:"Das Raster hat deutlich weniger Vorgaben."},
   fremd:{n:"Fremdsprache",d:"Die Hinweise stehen in zufälligen Zahlensystemen."},
   spannung:{n:"Überspannung",d:"Ein Kurzschluss kostet 2 Ladungen statt 1."}
 };
@@ -725,6 +724,7 @@ function makeRunPuzzle(nd){
   if(nd.t==="e"){ think=i<3?3:4; nh=2; N=i>=3?8:6; curses=pickN(curseList,asc>=4?2:1,rnd); }
   if(nd.t==="x"){ N=8; think=5; nh=3; curses=pickN(curseList,asc>=5?3:2,rnd); }
   if(asc>=3) think+=1;
+  if(curses.includes("dunkel")) think+=2;
   let special=null;
   if(nd.t==="p"&&i>=1){ const roll=rnd(); if(lr.img&&roll<.25) special="img"; else if(lr.ascii&&roll>=.25&&roll<.5) special="text"; }
   if(special) N=8;
@@ -1074,12 +1074,12 @@ function render(){
   $("undoBtn").disabled=!S.hist.length;
 }
 function cellSize(L){
-  const rh=(L.hints||[]).filter(h=>h.r!=null), side=rh.length?(rh.some(h=>h.kind==="rgb")?54:64):(L.N>8?50:42), gap=L.N>8?4:L.N>6?5:6;
+  const rh=(L.hints||[]).filter(h=>h.r!=null), side=rh.length?(rh.some(h=>h.kind==="rgb")?54:64):0, gap=L.N>8?4:L.N>6?5:6;
   return {cs:`min(${L.N>8?40:L.N>6?46:56}px, calc((100cqw - ${side+gap*(L.N+1)+10}px) / ${L.N}))`,gap:gap+"px"};
 }
 function renderBoard(){
   const L=P(), N=L.N, g=S.g, bad=$("optErr").checked?BS.errors(L,g):new Set();
-  const silent=!!(L.run&&L.curses.includes("stille")), sense=L.run&&runHas("twin")&&!S.solved?senseSet(L,g):new Set();
+  const sense=L.run&&runHas("twin")&&!S.solved?senseSet(L,g):new Set();
   const {cs,gap}=cellSize(L), bw=$("board");
   bw.style.setProperty("--cs",cs); bw.style.setProperty("--gap",gap); bw.style.gridTemplateColumns=`repeat(${N},var(--cs))`;
   $("hints").style.setProperty("--cs",cs); $("hints").style.setProperty("--gap",gap);
@@ -1104,7 +1104,7 @@ function renderBoard(){
   const cv=[...Array(N)].map((_,c)=>g.every(row=>row[c]!=null)?parseInt(g.map(row=>row[c]).join(""),2):null);
   const dup=arr=>new Set(arr.filter((v,i)=>v!=null&&arr.indexOf(v)!==i));
   const dR=dup(rv), dC=dup(cv);
-  $("hints").hidden=false;
+  $("hints").hidden=!rh.length;
   let h="";
   for(let r=0;r<N;r++){
     const hint=rh.find(x=>x.r===r), d=rv[r]!=null&&dR.has(rv[r]);
@@ -1112,14 +1112,14 @@ function renderBoard(){
       const t=BS.hVal(L,hint), ok=okOf(hint);
       if(hint.kind==="rgb"){ const lv=[(t>>4)&3,(t>>2)&3,t&3]; h+=`<div class="hint"><span class="sw${d?" dupsw":""}" style="background:${BS.rgbOf(t)}" title="Farbe">${lv.map(x=>`<i style="height:${4+x*5}px"></i>`).join("")}</span></div>`; }
       else h+=`<div class="hint${d?" bad":ok===true?" ok":ok===false?" bad":""}">${BS.hintText(hint,t,N)}</div>`;
-    } else h+= rv[r]==null||silent ? `<div class="hint"></div>` : `<div class="hint rv${d?" bad":""}" title="${d?"Diese Zeile gibt es doppelt":"Wert der Zeile"}">${rv[r]}</div>`;
+    } else h+=`<div class="hint"></div>`;
   }
   $("hints").innerHTML=h;
-  const cbox=$("chints"); cbox.hidden=false;
+  const cbox=$("chints"); cbox.hidden=!ch.length;
   cbox.style.setProperty("--cs",cs); cbox.style.setProperty("--gap",gap); cbox.style.gridTemplateColumns=`repeat(${N},var(--cs))`;
   cbox.innerHTML=[...Array(N)].map((_,c)=>{const hint=ch.find(x=>x.c===c), d=cv[c]!=null&&dC.has(cv[c]);
     if(hint){ const ok=okOf(hint); return `<div class="chint${d?" bad":ok===true?" ok":ok===false?" bad":""}">${BS.hintText(hint,BS.hVal(L,hint),N)}</div>`; }
-    return cv[c]==null||silent?`<div class="chint"></div>`:`<div class="chint rv${d?" bad":""}" title="${d?"Diese Spalte gibt es doppelt":"Wert der Spalte"}">${cv[c]}</div>`;}).join("");
+    return `<div class="chint"></div>`;}).join("");
 }
 function renderSecret(){
   const L=P(), N=L.N, g=S.g, sec=$("secret"), rv=L.reveal;
