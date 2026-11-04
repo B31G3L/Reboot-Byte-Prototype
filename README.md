@@ -8,10 +8,14 @@ Alles steckt in einer Datei (`index.html`), ohne Build-Schritt. Spielstand und S
 
 ## Binär-Sudoku
 
-Zweiter Prototyp: ein Binär-Sudoku mit 52 Bitten von sechs Robotern (Schwierigkeitsstufe 1–5) (Hex-, Oktal-, Dezimal-, ASCII- und Farbhinweise an Zeilen und Spalten, 6×6 bis 10×10, Gleich/Verschieden-Zeichen, Geheimnachricht und Geheimbild per XOR) und Tipps, die den nächsten Logikschritt erklären.
+Zweiter Prototyp: ein Binär-Sudoku als Roguelite im Reboot-BYTE-Look.
 
-Mit Nachtschicht-Modus (Roguelite: Karte mit acht Etagen, Akku, Bits, Module, Flüche, Hauptrechner als Boss), Werkstatt (die sechs Roboter bitten um Hilfe und wachen nach und nach auf), Sammelalbum und täglichem Rätsel nach Dienstplan.
+- **Nachtschicht:** acht Etagen bis zum Hauptrechner, Akku als Leben (falsches Bit = Kurzschluss), Bits für Tipps und Module, Störungen mit Flüchen
+- **Roboter werden freigeschaltet** (Etage 3, 3 Störungen, Etage 6, erster Sieg, Sieg mit 2 Robotern). Beim Aufwachen gibt es eine kurze Einführung, danach tauchen ihre Hinweis-Arten (Hex, Oktal, ASCII, Geheimbilder, Farben) in den Schichten auf.
+- **Werkstatt:** Ersatzteile aus jeder Schicht für dauerhafte Upgrades, dazu Spannungsstufen nach dem ersten Sieg
+- **Album:** Geheimbilder und Nachrichten, die man unterwegs findet
+- Tagesschicht mit festem Seed, Schalter „Alles freischalten (Test)“
 
 Spielen: https://b31g3l.github.io/Reboot-Byte-Prototype/binaer-sudoku/
 
-Liegt in `binaer-sudoku/index.html`, ebenfalls ohne Build-Schritt.
+Liegt in `binaer-sudoku/index.html`, ohne Build-Schritt.

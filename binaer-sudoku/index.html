@@ -238,7 +238,7 @@ footer button{font-size:16px}
 .lhead{align-items:center}
 
 /* ---- Nachtschicht ---- */
-.tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .tabs .tab{font-size:19px;padding:6px 2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .intro2{margin:0;font-family:var(--f-display);font-size:19px;line-height:1.15;color:var(--fg);max-width:60ch}
 .sy{font-family:var(--f-display);font-size:16px;color:var(--muted)}
@@ -286,6 +286,18 @@ footer button{font-size:16px}
 .cell.sense{position:relative}
 .cell.sense::after{content:"";position:absolute;right:18%;top:18%;width:6px;height:6px;border-radius:50%;background:var(--acc);box-shadow:0 0 6px var(--acc)}
 .cell.zap{background:var(--bad)!important;border-color:var(--bad)!important;box-shadow:0 0 18px var(--bad)!important;animation:flick .6s steps(2) 1}
+
+/* ---- Meta ---- */
+.wake{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:12px 0}
+.wake canvas{width:120px;height:144px;image-rendering:pixelated;filter:drop-shadow(0 0 12px color-mix(in srgb,var(--c) 60%,transparent));animation:bootup 1.2s steps(6) 1}
+@keyframes bootup{0%{opacity:0;filter:brightness(3)}60%{opacity:1}}
+.wake h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:38px;color:var(--c);text-shadow:0 0 12px color-mix(in srgb,var(--c) 50%,transparent)}
+.wake .bubble{text-align:left;max-width:440px}
+.wake .bubble::before{display:none}
+.crew.lockedc{opacity:.6}
+.crew.lockedc b{color:var(--muted)}
+.crew .tutbtn{margin-top:6px;min-height:34px;font-size:16px;padding:2px 8px;align-self:flex-start}
+.ascrow{display:flex;gap:6px;flex-wrap:wrap}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -297,12 +309,11 @@ footer button{font-size:16px}
     <label class="toggle"><input type="checkbox" id="optErr" checked> Regelverstöße markieren</label>
   </header>
   <nav class="tabs" id="tabs" aria-label="Bereiche">
-    <button class="tab" data-v="hub" aria-pressed="true">Werkstatt</button>
-    <button class="tab" data-v="daily" aria-pressed="false">Täglich</button>
-    <button class="tab" data-v="run" aria-pressed="false">Nacht</button>
+    <button class="tab" data-v="run" aria-pressed="true">Schicht</button>
+    <button class="tab" data-v="hub" aria-pressed="false">Werkstatt</button>
     <button class="tab" data-v="album" aria-pressed="false">Album</button>
   </nav>
-  <section id="hub" class="view"></section>
+  <section id="hub" class="view" hidden></section>
   <section id="daily" class="view" hidden></section>
   <section id="album" class="view" hidden></section>
   <section id="run" class="view" hidden></section>
@@ -517,6 +528,129 @@ function makeDaily(d){
   P.id="d"+key; P.bot=bot; P.daily=key; return P;
 }
 
+// ===== Meta-Fortschritt: Freischaltung, Einführungen, Ersatzteile, Album =====
+const TUT={BYTE:[1,100,2,101,5],HEXA:[3,107,108,4],OKTA:[9,114,116],ASKI:[6,120,121],PIXA:[7,127,128],CHROMA:[8,134,136]};
+const BRINGS={BYTE:"Binär, Dezimalwerte und die Zeichen = und ×",HEXA:"Hex-Hinweise",OKTA:"Oktal-Hinweise",ASKI:"Buchstaben-Hinweise und Geheimnachrichten",PIXA:"Geheimbilder",CHROMA:"Farbhinweise"};
+const WAKE_TXT={BYTE:"BYTE fährt hoch …",HEXA:"HEXA ist aufgewacht!",OKTA:"OKTA ist aufgewacht!",ASKI:"ASKI ist aufgewacht!",PIXA:"PIXA ist aufgewacht!",CHROMA:"CHROMA ist aufgewacht!"};
+const WAKE_SAY={BYTE:"Hallo! Ich bin BYTE. Bevor wir in die Nachtschicht gehen, zeige ich dir kurz, wie die Raster funktionieren.",
+  HEXA:"Endlich jemand, der weit genug gekommen ist. Ich bringe dir Hex bei. Trivial, versprochen.",
+  OKTA:"Du hast meine Störungen behoben. Danke! Ich zeige dir, wie meine Zahnräder in Achtern zählen.",
+  ASKI:"Ich habe so viel Post, die keiner lesen kann. Lass mich dir die Buchstaben zeigen.",
+  PIXA:"Der Hauptrechner läuft wieder, und mein Bildschirm auch! Ich zeige dir, wie man Bilder aus dem Rauschen holt.",
+  CHROMA:"Zwei verschiedene Schichtleiter, beide erfolgreich. Jetzt bin ich dran: Farben!"};
+const UNLOCK_TXT={BYTE:"von Anfang an",HEXA:"Erreiche Etage 3",OKTA:"Behebe insgesamt 3 Störungen",ASKI:"Erreiche Etage 6",PIXA:"Besiege den Hauptrechner",CHROMA:"Besiege den Hauptrechner mit 2 verschiedenen Robotern"};
+const UPGRADES={
+  akku:{n:"Größerer Akku",d:"+1 Ladung zu Schichtbeginn",cost:[8,16]},
+  bits:{n:"Startkapital",d:"+5 Bits zu Schichtbeginn",cost:[6,12]},
+  tip:{n:"Tipp-Rabatt",d:"Tipps kosten 1 Bit weniger",cost:[10,20]},
+  twin:{n:"Zwillingssensor",d:"Kommt in den Modul-Pool",cost:[10]},
+  diag:{n:"Diagnose",d:"Kommt in den Modul-Pool",cost:[12]}
+};
+const ASC=[null,
+  {n:"Stufe 1",d:"1 Ladung weniger zu Beginn"},
+  {n:"Stufe 2",d:"Tipps kosten 2 Bits mehr"},
+  {n:"Stufe 3",d:"Rätsel haben weniger Vorgaben"},
+  {n:"Stufe 4",d:"Störungen haben 2 Flüche"},
+  {n:"Stufe 5",d:"Der Hauptrechner hat 3 Flüche"}];
+const RUN_WORDS=["HALLO DU","GEKNACKT","PERFEKT!","BITWEISE","KLASSE!!","GENIAL!!","LOGISCH!","SPITZE!!","BRAVO!!!","STOP!!!!"];
+
+const M0=()=>({unlocked:["BYTE"],tutDone:{},tutProg:{},wake:["BYTE"],stats:{maxFloor:0,elites:0,wins:0,winBots:[]},parts:0,up:{},ascMax:0,asc:0,album:{img:[],word:[]}});
+let M=M0();
+try{ const s=JSON.parse(localStorage.getItem("binaersudoku-meta")||"null"); if(s) M=Object.assign(M0(),s); }catch(e){}
+const saveMeta=()=>{ try{ localStorage.setItem("binaersudoku-meta",JSON.stringify(M)); }catch(e){} };
+const upLvl=k=>M.up[k]||0;
+const isUnlocked=b=>UNLOCK||M.unlocked.includes(b);
+const isReady=b=>UNLOCK||(M.unlocked.includes(b)&&!!M.tutDone[b]);
+const readyBots=()=>WAKEORDER.filter(isReady);
+const learned=()=>({hex:isReady("HEXA"),oct:isReady("OKTA"),ascii:isReady("ASKI"),img:isReady("PIXA"),rgb:isReady("CHROMA")});
+function modPool(){ const p=["fuse","saver","pack","coupon"]; if(UNLOCK||upLvl("twin")) p.push("twin"); if(UNLOCK||upLvl("diag")) p.push("diag"); return p; }
+
+function checkUnlocks(){
+  const s=M.stats, cond={HEXA:s.maxFloor>=3,OKTA:s.elites>=3,ASKI:s.maxFloor>=6,PIXA:s.wins>=1,CHROMA:new Set(s.winBots).size>=2};
+  const fresh=[];
+  for(const b of WAKEORDER) if(b!=="BYTE"&&cond[b]&&!M.unlocked.includes(b)){ M.unlocked.push(b); M.wake.push(b); fresh.push(b); }
+  saveMeta(); return fresh;
+}
+function collect(L){
+  if(L.reveal?.type==="image"){ const k=L.reveal.img.join(","); if(!M.album.img.includes(k)) M.album.img.push(k); }
+  if(L.reveal?.type==="text"&&!M.album.word.includes(L.reveal.word)) M.album.word.push(L.reveal.word);
+  saveMeta();
+}
+
+// ---------- Einführung ----------
+function startTutorial(bot,from){
+  const idx=from!=null?from:(M.tutDone[bot]?0:(M.tutProg[bot]||0));
+  M.wake=M.wake.filter(b=>b!==bot); saveMeta();
+  const L=lvById(TUT[bot][idx]);
+  play(Object.assign({},L,{tut:bot,tutIdx:idx,bot}));
+}
+function tutorialSolved(){
+  const L=P(), bot=L.tut, list=TUT[bot], last=L.tutIdx===list.length-1;
+  collect(L);
+  if(!M.tutDone[bot]) M.tutProg[bot]=L.tutIdx+1;
+  const first=last&&!M.tutDone[bot];
+  if(last) M.tutDone[bot]=true;
+  saveMeta();
+  const extra=L.reveal?.type==="text"?`Die Nachricht lautet <b>${L.reveal.word}</b>.`:L.reveal?.type==="image"?`Das Bild ist entschlüsselt und liegt jetzt im Album.`:"";
+  $("won").innerHTML=`<canvas id="wonbot" width="20" height="24" aria-hidden="true" style="width:80px;height:96px;image-rendering:pixelated;filter:drop-shadow(0 0 8px var(--glow))"></canvas>
+    <h3>${last?"Einführung geschafft!":"Gelöst!"}</h3>
+    <p><b>${bot}:</b> ${last?(first?`Jetzt kennst du alles, was ich kann. Ab sofort ${bot==="BYTE"?"geht es in die Nachtschicht":`tauchen ${BRINGS[bot]} in deinen Schichten auf, und du kannst mich als Startroboter wählen`}.`:"Gut aufgefrischt!"):WIN[bot]}</p>
+    ${extra?`<p>${extra}</p>`:""}<p class="sy">Einführung ${L.tutIdx+1} von ${list.length}</p>
+    <div class="actions"><button class="btn" id="look">Raster ansehen</button><button class="btn primary" id="tutNext">${last?"Zur Nachtschicht":"Weiter"}</button></div>`;
+  $("won").hidden=false; drawBot($("wonbot"),bot);
+  $("look").onclick=()=>{ $("won").hidden=true; };
+  $("tutNext").onclick=()=> last ? show("run") : startTutorial(bot,L.tutIdx+1);
+  $("tutNext").focus();
+}
+function wakeScreen(bot){
+  const el=$("run");
+  el.innerHTML=`<div class="wake" style="--c:${ROBOTS[bot]}"><canvas width="20" height="24" id="wbot" aria-hidden="true"></canvas>
+    <h2>${WAKE_TXT[bot]}</h2><div class="bubble" style="border-color:${ROBOTS[bot]}"><b style="color:${ROBOTS[bot]}">${bot}:</b> ${WAKE_SAY[bot]}</div>
+    <p class="sy">${bot} bringt mit: ${BRINGS[bot]} · ${TUT[bot].length} kurze Rätsel</p>
+    <div class="actions"><button class="btn primary" id="tutGo">${M.tutProg[bot]?"Einführung fortsetzen":"Einführung starten"}</button></div></div>`;
+  setRobotColor(bot); drawBot($("wbot"),bot);
+  $("tutGo").onclick=()=>startTutorial(bot);
+}
+
+// ---------- Werkstatt (Upgrades + Roboter) ----------
+function renderShop(){
+  const el=$("hub");
+  let html=`<div class="vhead"><h2>Werkstatt</h2><span class="bits" style="font-size:22px">⚙ ${M.parts} Ersatzteile</span></div>
+    <p class="intro2">Ersatzteile bekommst du am Ende jeder Schicht: 1 pro Etage, 2 pro Störung, 5 für den Hauptrechner, dazu die Spannungsstufe als Bonus.</p><div class="offer">`;
+  for(const [k,u] of Object.entries(UPGRADES)){
+    const lv=upLvl(k), max=u.cost.length, done=lv>=max, cost=u.cost[lv];
+    html+=`<button class="btn mod upg" data-k="${k}" ${done||M.parts<cost?"disabled":""}><b>${u.n} ${max>1?`· ${lv}/${max}`:done?"· gebaut":""}</b><small>${u.d}${done?"":` · ${cost} Ersatzteile`}</small></button>`;
+  }
+  html+=`</div><div class="vhead"><h2 style="font-size:24px">Roboter</h2><span>${M.unlocked.length} von 6 wach</span></div><div class="crewgrid">`;
+  const s=M.stats, prog={HEXA:`${Math.min(s.maxFloor,3)}/3`,OKTA:`${Math.min(s.elites,3)}/3`,ASKI:`${Math.min(s.maxFloor,6)}/6`,PIXA:`${Math.min(s.wins,1)}/1`,CHROMA:`${Math.min(new Set(s.winBots).size,2)}/2`};
+  for(const b of WAKEORDER){
+    const un=isUnlocked(b), rd=isReady(b);
+    html+=`<div class="crew${un?"":" lockedc"}" style="--c:${ROBOTS[b]}"><canvas width="20" height="24" data-bot="${b}" data-dim="${un?0:1}" aria-hidden="true"></canvas><span><b>${b}</b>
+      <small>${un?BRINGS[b]:UNLOCK_TXT[b]+(prog[b]?` · ${prog[b]}`:"")}</small>
+      ${un?`<button class="btn tutbtn" data-bot="${b}">${rd?"Einführung":"Einführung starten"}</button>`:""}</span></div>`;
+  }
+  html+=`</div>`;
+  el.innerHTML=html;
+  el.querySelectorAll("canvas[data-bot]").forEach(cv=>drawBot(cv,cv.dataset.bot,cv.dataset.dim==="1"));
+  el.querySelectorAll(".upg").forEach(b=>b.onclick=()=>{ const k=b.dataset.k, cost=UPGRADES[k].cost[upLvl(k)]; if(M.parts<cost) return; M.parts-=cost; M.up[k]=upLvl(k)+1; saveMeta(); renderShop(); });
+  el.querySelectorAll(".tutbtn").forEach(b=>b.onclick=()=>startTutorial(b.dataset.bot,isReady(b.dataset.bot)?0:undefined));
+}
+
+// ---------- Album ----------
+function renderAlbum2(){
+  const gi=M.album.img.length, gw=M.album.word.length;
+  let html=`<div class="vhead"><h2>Album</h2><span>${gi+gw} von ${IMGS.length+RUN_WORDS.length} gefunden</span></div>
+    <p class="intro2">Geheimbilder und Nachrichten findest du in Schichten, sobald PIXA und ASKI wach sind.</p>
+    <div class="vhead"><h2 style="font-size:24px">Bilder</h2><span>${gi} von ${IMGS.length}</span></div><div class="alb">`;
+  for(const img of IMGS){ const got=M.album.img.includes(img.join(","));
+    html+= got?`<div class="at got" style="--c:${ROBOTS.PIXA}">${artGrid(img,8)}<div class="cap">PIXA</div></div>`:`<div class="at"><div class="q">?</div><div class="cap" style="color:var(--muted)">noch im Rauschen</div></div>`; }
+  html+=`</div><div class="vhead"><h2 style="font-size:24px">Nachrichten</h2><span>${gw} von ${RUN_WORDS.length}</span></div><div class="alb">`;
+  for(const w of RUN_WORDS){ const got=M.album.word.includes(w);
+    html+= got?`<div class="at got" style="--c:${ROBOTS.ASKI}"><div class="word">${w}</div><div class="cap">ASKI</div></div>`:`<div class="at"><div class="q">?</div><div class="cap" style="color:var(--muted)">verschlüsselt</div></div>`; }
+  html+=`</div>`;
+  $("album").innerHTML=html;
+}
+
 // ===== Nachtschicht (Roguelite) =====
 const MODS={
   fuse:{n:"Sicherung",d:"Der erste Kurzschluss pro Rätsel kostet nichts."},
@@ -565,11 +699,17 @@ const floorNow=()=>R.at==null?0:nodeById(R.at).layer+1;
 
 function runStart(bot,seed,daily){
   const s=seed||Math.floor(Math.random()*2e9)+1;
-  R={seed:s,daily:daily||null,bot,akku:CREW[bot].akku,max:CREW[bot].akku,bits:4,mods:bot==="PIXA"?["twin"]:[],map:makeMap(s),at:null,done:[],panel:null,over:null,solved:0,zaps:0,nextCurse:false,shop:{},bought:{},events:{}};
+  const ak=CREW[bot].akku+upLvl("akku")-(M.asc>=1?1:0);
+  R={seed:s,daily:daily||null,bot,asc:daily?0:M.asc,elites:0,akku:ak,max:ak,bits:4+5*upLvl("bits"),mods:bot==="PIXA"?["twin"]:[],map:makeMap(s),at:null,done:[],panel:null,over:null,solved:0,zaps:0,nextCurse:false,shop:{},bought:{},events:{}};
   saveRun(); renderRun();
 }
 function runEnd(kind){
   R.over=kind;
+  const fl=kind==="win"?layerCount():floorNow();
+  M.stats.maxFloor=Math.max(M.stats.maxFloor,fl);
+  if(kind==="win"){ M.stats.wins++; if(!M.stats.winBots.includes(R.bot)) M.stats.winBots.push(R.bot); if(!R.daily&&R.asc>=M.ascMax&&M.ascMax<5) M.ascMax=R.asc+1; }
+  R.parts=fl+2*(R.elites||0)+(kind==="win"?5:0)+(R.asc||0); M.parts+=R.parts;
+  R.fresh=checkUnlocks(); saveMeta();
   const res={floor:kind==="win"?layerCount():floorNow(),solved:R.solved,bits:R.bits,bot:R.bot,win:kind==="win"};
   if(!RBEST||res.floor>RBEST.floor||(res.floor===RBEST.floor&&res.bits>RBEST.bits)) RBEST=res;
   saveRun();
@@ -579,23 +719,43 @@ function runEnd(kind){
 function makeRunPuzzle(nd){
   const G=makeGen(hashStr(R.seed+":"+nd.id)), rnd=G.rnd, i=nd.layer;
   let N=6, think=1, nh=0, curses=[];
-  const curseList=Object.keys(CURSES);
+  const lr=learned(), asc=R.asc||0;
+  const curseList=Object.keys(CURSES).filter(c=>c!=="fremd"||lr.hex||lr.oct);
   if(nd.t==="p"){ think=i<2?1:i<4?2:3; nh=i<2?0:i<4?1:2; N=i>=5&&rnd()<.5?8:6; }
-  if(nd.t==="e"){ think=i<3?3:4; nh=2; N=i>=3?8:6; curses=pickN(curseList,1,rnd); }
-  if(nd.t==="x"){ N=8; think=5; nh=3; curses=pickN(curseList,2,rnd); }
+  if(nd.t==="e"){ think=i<3?3:4; nh=2; N=i>=3?8:6; curses=pickN(curseList,asc>=4?2:1,rnd); }
+  if(nd.t==="x"){ N=8; think=5; nh=3; curses=pickN(curseList,asc>=5?3:2,rnd); }
+  if(asc>=3) think+=1;
+  let special=null;
+  if(nd.t==="p"&&i>=1){ const roll=rnd(); if(lr.img&&roll<.25) special="img"; else if(lr.ascii&&roll>=.25&&roll<.5) special="text"; }
+  if(special) N=8;
   if(R.nextCurse&&nd.t!=="x"){ const c=curseList.find(c=>!curses.includes(c)); if(c) curses.push(c); R.nextCurse=false; }
   if(curses.includes("fremd")) nh=Math.max(nh,2);
-  const kinds=N===6?["dec","hex","oct"]:["dec","hex"];
+  const kinds=["dec"]; if(lr.hex) kinds.push("hex"); if(lr.oct&&N===6) kinds.push("oct");
   const lines=pickN([...Array(N).keys()].map(k=>({r:k})).concat([...Array(N).keys()].map(k=>({c:k}))),nh,rnd);
-  const hints=lines.map(l=>({...l,kind:curses.includes("fremd")?kinds[Math.floor(rnd()*kinds.length)]:(N===6?"hex":"dec")}));
-  const P={N,sol:G.randSol(N),hints,marks:[]};
-  G.reduce(P,think);
+  let hints=lines.map(l=>({...l,kind:kinds[Math.floor(rnd()*kinds.length)]}));
+  if(lr.rgb&&N===6&&rnd()<.35) hints=hints.map(h=>h.r!=null?{r:h.r,kind:"rgb"}:h).concat(hints.some(h=>h.r!=null)?[]:[{r:Math.floor(rnd()*N),kind:"rgb"}]);
+  let sol, reveal=null;
+  if(special==="text"){
+    sol=G.randSol(8,rows=>rows.filter(v=>v>=65&&v<=122&&/[A-Za-z]/.test(String.fromCharCode(v))).length>=2);
+    const ar=sol.map((v,k)=>[v,k]).filter(([v])=>v<=122&&/[A-Za-z]/.test(String.fromCharCode(v))).slice(0,2).map(([,k])=>k);
+    hints=ar.map(k=>({r:k,kind:"ascii"}));
+    const pool=RUN_WORDS.filter(w=>!M.album.word.includes(w)), word=(pool.length?pool:RUN_WORDS)[Math.floor(rnd()*(pool.length||RUN_WORDS.length))];
+    reveal={type:"text",word,key:sol.map((v,k)=>v^word.charCodeAt(k))};
+  } else {
+    sol=G.randSol(N);
+    if(special==="img"){ const pool=IMGS.filter(im=>!M.album.img.includes(im.join(","))), img=(pool.length?pool:IMGS)[Math.floor(rnd()*(pool.length||IMGS.length))]; hints=[]; reveal={type:"image",img,cipher:sol.map((v,k)=>v^img[k])}; }
+  }
+  const P={N,sol,hints,marks:[]}; if(reveal) P.reveal=reveal;
+  if(nd.t==="e"||(nd.t==="p"&&i>=3&&rnd()<.3)){ const cand=[]; for(let a=0;a<N;a++) for(let b=0;b<N;b++){ if(b+1<N) cand.push([[a,b],[a,b+1]]); if(a+1<N) cand.push([[a,b],[a+1,b]]); }
+    P.marks=pickN(cand,nd.t==="e"?10:6,rnd).map(([a,b])=>({a,b,eq:BS.bit(sol[a[0]],N,a[1])===BS.bit(sol[b[0]],N,b[1])})); }
+  G.reduce(P,think); if(P.marks.length) G.reduceMarks(P,think);
   if(R.bot==="ASKI"){ const free=[...Array(N).keys()].filter(r=>!hints.some(h=>h.r===r)); if(free.length) P.hints.push({r:free[Math.floor(rnd()*free.length)],kind:"dec"}); }
   if(runHas("diag")){ const cand=[]; for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(!P.givens.some(([a,b])=>a===r&&b===c)&&!P.hints.some(h=>(h.r===r)||(h.c===c))) cand.push([r,c]); P.givens.push(...pickN(cand,3,rnd)); }
-  const title=nd.t==="x"?"Hauptrechner":nd.t==="e"?"Störung: "+curses.map(c=>CURSES[c].n).join(" + "):"Rätsel";
+  const title=nd.t==="x"?"Hauptrechner":nd.t==="e"?"Störung: "+curses.map(c=>CURSES[c].n).join(" + "):special==="img"?"Bild im Rauschen":special==="text"?"Abgefangene Post":"Rätsel";
   const intro=nd.t==="x"?"Der Hauptrechner. Wenn wir den schaffen, ist die Schicht geschafft.":nd.t==="e"?"Eine Störung! Pass auf, hier gelten verschärfte Bedingungen.":["Ein Schaltkreis braucht Hilfe.","Hier ist etwas durchgebrannt.","Noch ein Raster, dann sehen wir weiter.","Ruhig bleiben, keine Kurzschlüsse."][Math.floor(rnd()*4)];
   const cd=curses.map(c=>` ${CURSES[c].n}: ${CURSES[c].d}`).join("");
-  return Object.assign(P,{id:"run-"+nd.id,run:true,node:nd.id,bot:R.bot,curses,t:title,i:intro+cd,x:""});
+  const sx=special==="img"?" Dahinter steckt ein Bild für dein Album.":special==="text"?" Jede fertige Zeile XOR Schlüssel ergibt einen Buchstaben.":"";
+  return Object.assign(P,{id:"run-"+nd.id,run:true,node:nd.id,bot:R.bot,curses,t:title,i:intro+sx+cd,x:P.marks.length?"= heißt gleich, × heißt verschieden.":(hints.some(h=>h.kind==="rgb")?"Farbe = RRGGBB, je zwei Bits pro Kanal.":"")});
 }
 function startRunPuzzle(nd){
   const L=makeRunPuzzle(nd); saveRun();
@@ -618,7 +778,7 @@ function runZap(r,c){
   setTimeout(()=>{ S.zapCell=null; if(S.view==="play"&&P()===L) renderBoard(); },650);
   if(R.akku<=0) setTimeout(runLose,750);
 }
-const hintCost=()=>runHas("coupon")?2:4;
+const hintCost=()=>Math.max(1,(runHas("coupon")?2:4)-upLvl("tip")+((R&&R.asc>=2)?2:0));
 function runPayHint(){
   if(R.bot==="BYTE"&&!S.freeTipUsed){ S.freeTipUsed=true; return true; }
   const c=hintCost(); if(R.bits<c){ S.note=`Ein Tipp kostet ${c} Bits. Du hast gerade ${R.bits}.`; render(); return false; }
@@ -644,15 +804,21 @@ function renderRunHud(){
 function runSolved(){
   const L=P(), nd=nodeById(L.node);
   R.at=nd.id; R.done.push(nd.id); R.solved++;
+  collect(L);
+  if(nd.t==="e"){ R.elites=(R.elites||0)+1; M.stats.elites++; }
+  M.stats.maxFloor=Math.max(M.stats.maxFloor,floorNow()); saveMeta();
   if(nd.t==="x"){ runEnd("win"); return runOverlay("win"); }
+  const before=M.unlocked.length, fresh=checkUnlocks();
   let bits=6+(S.zaps?0:4)+(runHas("saver")?3:0)+(R.bot==="HEXA"&&L.hints.length?3:0)-(R.bot==="OKTA"?2:0)+(nd.t==="e"?4:0);
   bits=Math.max(1,bits); R.bits+=bits; saveRun();
   const rnd=rng(hashStr(R.seed+":loot:"+nd.id));
-  const offer=nd.t==="e"?pickN(Object.keys(MODS).filter(m=>!R.mods.includes(m)),3,rnd):[];
+  const offer=nd.t==="e"?pickN(modPool().filter(m=>!R.mods.includes(m)),3,rnd):[];
   const bot=botOf(L);
   $("won").innerHTML=`<canvas id="wonbot" width="20" height="24" aria-hidden="true" style="width:72px;height:86px;image-rendering:pixelated;filter:drop-shadow(0 0 8px var(--glow))"></canvas>
     <h3>${nd.t==="e"?"Störung behoben":"Gelöst!"}</h3><p><b>${bot}:</b> ${WIN[bot]}</p>
     <p>+${bits} Bits${S.zaps?"":" (inklusive 4 Bonus für null Kurzschlüsse)"}</p>
+    ${L.reveal?`<p>${L.reveal.type==="text"?`Die Nachricht lautet <b>${L.reveal.word}</b>. Sie liegt jetzt im Album.`:"Das Bild ist entschlüsselt und liegt jetzt im Album."}</p>`:""}
+    ${fresh.length?`<p><b>${fresh.join(" und ")}</b> ${fresh.length>1?"sind":"ist"} aufgewacht! Nach der Schicht gibt es die Einführung.</p>`:""}
     ${offer.length?`<p>Such dir ein Modul aus:</p><div class="offer">${offer.map(m=>`<button class="btn mod" data-m="${m}"><b>${MODS[m].n}</b><small>${MODS[m].d}</small></button>`).join("")}</div>`:""}
     <div class="actions"><button class="btn" id="look">Raster ansehen</button><button class="btn primary" id="toMap">${offer.length?"Ohne Modul weiter":"Zur Karte"}</button></div>`;
   $("won").hidden=false; drawBot($("wonbot"),bot);
@@ -668,7 +834,8 @@ function runOverlay(kind){
   $("won").innerHTML=`<canvas id="wonbot" width="20" height="24" aria-hidden="true" style="width:80px;height:96px;image-rendering:pixelated;filter:drop-shadow(0 0 8px var(--glow))${kind==="lose"?";opacity:.45":""}"></canvas>
     <h3>${kind==="win"?"Schicht geschafft!":"Akku leer"}</h3>
     <p><b>${bot}:</b> ${kind==="win"?"Der Hauptrechner läuft. Feierabend!":"Mir wird schwarz vor Augen … Nächstes Mal schaffen wir das."}</p>
-    <ul><li class="got">Etage ${kind==="win"?layerCount():floorNow()} von ${layerCount()}</li><li class="got">${R.solved} Rätsel gelöst</li><li class="got">${R.bits} Bits · ${R.zaps} Kurzschlüsse</li></ul>
+    <ul><li class="got">Etage ${kind==="win"?layerCount():floorNow()} von ${layerCount()}</li><li class="got">${R.solved} Rätsel gelöst · ${R.zaps} Kurzschlüsse</li><li class="got">+${R.parts} Ersatzteile für die Werkstatt</li></ul>
+    ${M.wake.length?`<p><b>${M.wake.join(" und ")}</b> ${M.wake.length>1?"warten":"wartet"} auf dich!</p>`:""}
     <div class="actions"><button class="btn primary" id="toMap">Zur Nachtschicht</button></div>`;
   $("won").hidden=false; drawBot($("wonbot"),bot);
   $("toMap").onclick=()=>show("run"); $("toMap").focus();
@@ -685,16 +852,20 @@ function hudLine(){
 }
 function renderRun(){
   const el=$("run");
+  if((!R||R.over)&&M.wake.length&&!UNLOCK){ wakeScreen(M.wake[0]); return; }
   if(!R||R.over){
+    if(!isReady(RSEL)) RSEL=readyBots()[0]||"BYTE";
     const last=R&&R.over?`<p class="intro2">Letzte Schicht mit ${R.bot}: ${R.over==="win"?"geschafft!":`Etage ${floorNow()} von ${layerCount()}`} · ${R.solved} Rätsel · ${R.bits} Bits</p>`:"";
     el.innerHTML=`<div class="vhead"><h2>Nachtschicht</h2><span>${RBEST?`Bestwert: ${RBEST.win?"geschafft":"Etage "+RBEST.floor} mit ${RBEST.bot}`:"Noch keine Schicht"}</span></div>
       <p class="intro2">Acht Etagen bis zum Hauptrechner. Jedes falsche Bit ist ein Kurzschluss und kostet Ladung. Ist der Akku leer, endet die Schicht. Tipps kosten Bits, Bits verdienst du mit gelösten Rätseln.</p>${last}
       <div class="vhead"><h2 style="font-size:24px">Wer hat Dienst?</h2></div>
-      <div class="crewgrid">${WAKEORDER.map(b=>crewCard(b,b===RSEL)).join("")}</div>
+      <div class="crewgrid">${WAKEORDER.map(b=>isReady(b)?crewCard(b,b===RSEL):`<div class="crew lockedc" style="--c:${ROBOTS[b]}"><canvas width="20" height="24" data-bot="${b}" data-dim="1" aria-hidden="true"></canvas><span><b>${b}</b><small>schläft noch</small><em>${UNLOCK_TXT[b]}</em></span></div>`).join("")}</div>
+      ${(UNLOCK?5:M.ascMax)>0?`<div class="vhead"><h2 style="font-size:24px">Spannung</h2><span>${M.asc?ASC[M.asc].d:"normal"}</span></div><div class="ascrow">${[...Array((UNLOCK?5:M.ascMax)+1).keys()].map(a=>`<button class="lvdot${a===M.asc?" next":""}" data-asc="${a}" title="${a?ASC.slice(1,a+1).map(x=>x.d).join(", "):"normal"}">${a}</button>`).join("")}</div>`:""}
       <div class="actions"><button class="btn primary" id="startRun">Schicht starten</button><button class="btn" id="startDailyRun">Tagesschicht</button></div>
       <p class="sy">Die Tagesschicht hat heute für alle dieselbe Karte und dieselben Rätsel.</p>`;
-    el.querySelectorAll(".crew").forEach(b=>b.onclick=()=>{ RSEL=b.dataset.bot; setRobotColor(RSEL); renderRun(); });
-    el.querySelectorAll("canvas[data-bot]").forEach(cv=>drawBot(cv,cv.dataset.bot));
+    el.querySelectorAll("button.crew").forEach(b=>b.onclick=()=>{ RSEL=b.dataset.bot; setRobotColor(RSEL); renderRun(); });
+    el.querySelectorAll("[data-asc]").forEach(b=>b.onclick=()=>{ M.asc=+b.dataset.asc; saveMeta(); renderRun(); });
+    el.querySelectorAll("canvas[data-bot]").forEach(cv=>drawBot(cv,cv.dataset.bot,cv.dataset.dim==="1"));
     $("startRun").onclick=()=>runStart(RSEL);
     $("startDailyRun").onclick=()=>{ const k=dayKey(new Date()); runStart(RSEL,hashStr("tag:"+k),k); };
     setRobotColor(RSEL);
@@ -710,7 +881,7 @@ function renderRun(){
   let nodes="";
   for(const n of R.map){ const p=pos(n), st=R.done.includes(n.id)?"done":av.has(n.id)?"avail":"locked", here=R.at===n.id;
     nodes+=`<button class="node t-${n.t} ${st}${here?" here":""}" style="left:${p.x}%;top:${p.y}px" data-id="${n.id}" ${st==="avail"?"":"disabled"} aria-label="${NODE[n.t].n}, Etage ${n.layer+1}${st==="done"?", erledigt":st==="avail"?", erreichbar":""}"><span>${NODE[n.t].s}</span><small>${NODE[n.t].n}</small></button>`; }
-  el.innerHTML=`<div class="vhead"><h2>Nachtschicht${R.daily?" · Tag":""}</h2><span>${R.at==null?`${nL} Etagen bis zum Hauptrechner`:`Etage ${floorNow()} von ${nL}`}</span></div>${hudLine()}
+  el.innerHTML=`<div class="vhead"><h2>Nachtschicht${R.daily?" · Tag":R.asc?" · Stufe "+R.asc:""}</h2><span>${R.at==null?`${nL} Etagen bis zum Hauptrechner`:`Etage ${floorNow()} von ${nL}`}</span></div>${hudLine()}
     <div class="map" style="height:${height}px"><svg viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>${nodes}</div>
     <div class="legend">${Object.entries(NODE).map(([k,v])=>`<span><i class="t-${k}">${v.s}</i>${v.n}</span>`).join("")}</div>
     <div class="actions"><button class="btn" id="giveUp">Schicht abbrechen</button></div>`;
@@ -722,13 +893,14 @@ function enterNode(nd){
   if(["p","e","x"].includes(nd.t)){ $("run").innerHTML=`<p class="intro2">Schaltkreis wird geladen …</p>`; setTimeout(()=>startRunPuzzle(nd),20); return; }
   R.panel=nd.id; saveRun(); renderRun();
 }
-function finishNode(nd){ R.at=nd.id; R.done.push(nd.id); R.panel=null; saveRun(); renderRun(); }
-const EVENTS=[
+function finishNode(nd){ R.at=nd.id; R.done.push(nd.id); R.panel=null; M.stats.maxFloor=Math.max(M.stats.maxFloor,floorNow()); checkUnlocks(); saveRun(); renderRun(); }
+const EVENTS_ALL=[
   {k:"lend",ok:()=>R.akku>1,t:"Ich bin knapp bei Kasse. Leihst du mir eine Ladung? Ich zahle 12 Bits.",a:"1 Ladung gegen 12 Bits",f:()=>{R.akku--;R.bits+=12;}},
-  {k:"gift",ok:()=>Object.keys(MODS).some(m=>!R.mods.includes(m)),t:"Ich habe ein Modul übrig. Aber Achtung, es hängt eine Störung dran: Dein nächstes Rätsel bekommt einen Fluch.",a:"Modul nehmen, Fluch in Kauf nehmen",f:nd=>{const rnd=rng(hashStr(R.seed+":gift:"+nd.id));takeMod(pickN(Object.keys(MODS).filter(m=>!R.mods.includes(m)),1,rnd)[0]);R.nextCurse=true;}},
+  {k:"gift",ok:()=>modPool().some(m=>!R.mods.includes(m)),t:"Ich habe ein Modul übrig. Aber Achtung, es hängt eine Störung dran: Dein nächstes Rätsel bekommt einen Fluch.",a:"Modul nehmen, Fluch in Kauf nehmen",f:nd=>{const rnd=rng(hashStr(R.seed+":gift:"+nd.id));takeMod(pickN(modPool().filter(m=>!R.mods.includes(m)),1,rnd)[0]);R.nextCurse=true;}},
   {k:"charge",ok:()=>R.bits>=6&&R.akku<R.max,t:"Für 6 Bits lade ich dich komplett auf.",a:"Voll aufladen für 6 Bits",f:()=>{R.bits-=6;R.akku=R.max;}},
   {k:"cap",ok:()=>R.bits>=8,t:"Ich kann deinen Akku vergrößern. Kostet 8 Bits.",a:"+1 maximale Ladung für 8 Bits",f:()=>{R.bits-=8;R.max++;R.akku++;}}
 ];
+const EVENTS=EVENTS_ALL;
 function renderPanel(nd){
   const el=$("run"), rnd=rng(hashStr(R.seed+":panel:"+nd.id));
   let body="";
@@ -737,7 +909,7 @@ function renderPanel(nd){
       <div class="offer"><button class="btn mod" id="ch2" ${R.akku>=R.max?"disabled":""}><b>Aufladen</b><small>+2 Ladungen (bis zum Maximum)</small></button>
       <button class="btn mod" id="chMax"><b>Akku erweitern</b><small>+1 maximale Ladung</small></button></div>`;
   } else if(nd.t==="w"){
-    R.shop[nd.id]=R.shop[nd.id]||pickN(Object.keys(MODS).filter(m=>!R.mods.includes(m)),3,rnd);
+    R.shop[nd.id]=R.shop[nd.id]||pickN(modPool().filter(m=>!R.mods.includes(m)),3,rnd);
     const bought=R.bought[nd.id]||[];
     body=`<h3 class="ph">Werkbank</h3><p class="intro2">Module kosten ${MOD_PRICE} Bits. Du hast ${R.bits}.</p>
       <div class="offer">${R.shop[nd.id].map(m=>`<button class="btn mod buy" data-m="${m}" ${bought.includes(m)||R.mods.includes(m)||R.bits<MOD_PRICE?"disabled":""}><b>${MODS[m].n}${bought.includes(m)?" · gekauft":""}</b><small>${MODS[m].d}</small></button>`).join("")}
@@ -808,11 +980,12 @@ function setRobotColor(bot){ const col=ROBOTS[bot]; document.documentElement.sty
 function show(v){
   S.view=v;
   ["hub","daily","album","run"].forEach(x=>$(x).hidden=x!==v);
+  if(v==="daily"){ v="run"; S.view=v; $("daily").hidden=true; $("run").hidden=false; }
   $("card").hidden=v!=="play";
   $("tabs").hidden=v==="play";
   document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v));
   if(v!=="play"){ setRobotColor("BYTE"); }
-  if(v==="hub") renderHub(); if(v==="daily") renderDaily(); if(v==="album") renderAlbum(); if(v==="run") renderRun();
+  if(v==="hub") renderShop(); if(v==="album") renderAlbum2(); if(v==="run") renderRun();
   window.scrollTo(0,0);
 }
 function renderHub(){
@@ -890,9 +1063,9 @@ function play(L){
 const isGiven=(r,c)=>P().givens.some(([a,b])=>a===r&&b===c);
 function render(){
   const L=P(), m=metaOf(L), bot=botOf(L);
-  $("eyebrow").textContent=L.run?`Nachtschicht · Etage ${nodeById(L.node).layer+1} von ${layerCount()} · ${L.N}×${L.N}`:L.daily?`Tagesrätsel · ${new Date(L.daily+"T12:00").toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})} · ${L.N}×${L.N}`:`${L.bot} · Bitte ${L.pos+1} von ${chainOf(L.bot).length} · ${L.N}×${L.N} · Stufe ${L.stufe}/5`;
+  $("eyebrow").textContent=L.tut?`${L.tut} · Einführung ${L.tutIdx+1} von ${TUT[L.tut].length} · ${L.N}×${L.N}`:L.run?`Nachtschicht · Etage ${nodeById(L.node).layer+1} von ${layerCount()} · ${L.N}×${L.N}`:L.daily?`Tagesrätsel · ${new Date(L.daily+"T12:00").toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})} · ${L.N}×${L.N}`:`${L.bot} · Bitte ${L.pos+1} von ${chainOf(L.bot).length} · ${L.N}×${L.N} · Stufe ${L.stufe}/5`;
   $("title").textContent=m.t;
-  $("backBtn").textContent=L.run?"‹ Karte":L.daily?"‹ Tagesrätsel":"‹ Werkstatt";
+  $("backBtn").textContent=L.tut?"‹ Später":L.run?"‹ Karte":L.daily?"‹ Tagesrätsel":"‹ Werkstatt";
   setRobotColor(bot); drawBot($("bot"),bot);
   if(!S.tip) $("intro").innerHTML=`<b>${bot}:</b> ${S.note||m.i}`;
   renderRunHud();
@@ -1002,6 +1175,7 @@ function hint(){
 }
 function showWin(){
   if(P().run) return runSolved();
+  if(P().tut) return tutorialSolved();
   const L=P(), stars=1+(!S.hinted?1:0)+(!S.violated?1:0), bot=botOf(L);
   const before=solvedCount();
   if(L.daily){ const prev=dailyDone[L.daily]; dailyDone[L.daily]={stars:Math.max(stars,prev?.stars||0),L:{N:L.N,sol:L.sol,hints:(L.hints||[]).map(h=>({kind:h.kind})),reveal:L.reveal?(L.reveal.type==="image"?{type:"image",img:L.reveal.img}:{type:"text",word:L.reveal.word}):null,bot:L.bot}}; }
@@ -1033,17 +1207,18 @@ window.addEventListener("pointerup",endSwipe); window.addEventListener("pointerc
 $("board").addEventListener("click",e=>{ if(e.detail!==0) return; const b=e.target.closest(".cell"); if(b) tap(+b.dataset.r,+b.dataset.c); });
 $("board").addEventListener("keydown",e=>{ const b=e.target.closest(".cell"); if(!b) return; const r=+b.dataset.r,c=+b.dataset.c;
   const k={ArrowUp:1,"1":1,ArrowDown:0,"0":0,Backspace:null,Delete:null}; if(e.key in k){ e.preventDefault(); setCell(r,c,k[e.key]); } });
-$("hub").addEventListener("click",e=>{const b=e.target.closest(".lvdot");if(b&&!b.disabled)play(lvById(+b.dataset.id));});
 $("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab");if(b)show(b.dataset.v);});
-$("backBtn").onclick=()=>show(P()?.run?"run":P()?.daily?"daily":"hub");
+$("backBtn").onclick=()=>show(P()?.run||P()?.tut?"run":P()?.daily?"daily":"hub");
 $("hintBtn").onclick=hint;
 $("undoBtn").onclick=()=>{ if(!S.hist.length||S.solved) return; S.g=S.hist.pop(); S.tip=null; render(); };
 $("resetBtn").onclick=()=>play(P());
 $("optErr").onchange=()=>renderBoard();
 $("unlockAll").checked=UNLOCK;
 $("unlockAll").onchange=e=>{ UNLOCK=e.target.checked; try{localStorage.setItem("binaersudoku-unlock",UNLOCK?"1":"0")}catch(err){} if(S.view!=="play") show(S.view); };
-$("wipe").onclick=()=>{progress={};dailyDone={};save();show(S.view==="play"?"hub":S.view);};
-show("hub");
+$("wipe").onclick=()=>{ const b=$("wipe"); if(!b.dataset.sure){ b.dataset.sure="1"; b.textContent="Wirklich alles löschen?"; return; }
+  delete b.dataset.sure; b.textContent="Fortschritt löschen";
+  progress={};dailyDone={};save(); M=M0(); saveMeta(); R=null; RBEST=null; saveRun(); show("run"); };
+show("run");
 
 </script>
 </body>
