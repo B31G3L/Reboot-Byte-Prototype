@@ -279,7 +279,7 @@ footer button{font-size:16px}
     </div>
     <div class="won" id="won" hidden></div>
   </section>
-  <footer><span>Jedes Rätsel ist ohne Raten lösbar. Der Tipp erklärt immer den nächsten logischen Schritt.</span><button id="wipe">Fortschritt löschen</button></footer>
+  <footer><span>Jedes Rätsel ist ohne Raten lösbar. Der Tipp erklärt immer den nächsten logischen Schritt.</span><span style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><label class="toggle" style="font-size:16px"><input type="checkbox" id="unlockAll"> Alles freischalten (Test)</label><button id="wipe">Fortschritt löschen</button></span></footer>
 </div>
 
 <script>
@@ -501,7 +501,8 @@ for(const L of LEVELS){
   L.req=[...req];
 }
 const reqMissing=L=>(L.req||[]).filter(id=>!progress[id]).map(id=>LEVELS.find(x=>x.id===id));
-function avail(L,n){ if(L.need>n) return false; if(reqMissing(L).length) return false; const ch=chainOf(L.bot); return L.pos===0||!!progress[ch[L.pos-1].id]; }
+let UNLOCK=false; try{UNLOCK=localStorage.getItem("binaersudoku-unlock")==="1"}catch(e){}
+function avail(L,n){ if(UNLOCK) return true; if(L.need>n) return false; if(reqMissing(L).length) return false; const ch=chainOf(L.bot); return L.pos===0||!!progress[ch[L.pos-1].id]; }
 const metaOf=L=>L.daily?{t:"Tagesrätsel",i:DAILY_INTRO[L.bot]+(L.reveal?.type==="text"?" Und wie immer ergibt jede fertige Zeile XOR Schlüssel einen Buchstaben.":""),x:L.marks?.length?"= heißt gleich, × heißt verschieden.":L.hints?.some(h=>h.kind==="rgb")?"Farbe = RRGGBB, je zwei Bits pro Kanal.":""}:(L.t?{t:L.t,i:L.i,x:L.x}:META[L.id]);
 const solvedCount=()=>LEVELS.filter(L=>progress[L.id]).length;
 function setRobotColor(bot){ const col=ROBOTS[bot]; document.documentElement.style.setProperty("--one",col); document.documentElement.style.setProperty("--glow",col+"55"); }
@@ -522,7 +523,7 @@ function renderHub(){
   let html=`<div class="vhead"><h2>Werkstatt</h2><span>${n} von ${LEVELS.length} Bitten erfüllt</span></div><div class="bots">`;
   for(const bot of WAKEORDER){
     const ch=chainOf(bot); if(!ch.length) continue;
-    const awake=ch[0].need<=n, allDone=ch.every(L=>progress[L.id]);
+    const awake=UNLOCK||ch[0].need<=n, allDone=ch.every(L=>progress[L.id]);
     const next=ch.find(L=>!progress[L.id]&&avail(L,n));
     const firstOpen=ch.find(L=>!progress[L.id]);
     const left=firstOpen?firstOpen.need-n:0;
@@ -736,6 +737,8 @@ $("hintBtn").onclick=hint;
 $("undoBtn").onclick=()=>{ if(!S.hist.length||S.solved) return; S.g=S.hist.pop(); S.tip=null; render(); };
 $("resetBtn").onclick=()=>play(P());
 $("optErr").onchange=()=>renderBoard();
+$("unlockAll").checked=UNLOCK;
+$("unlockAll").onchange=e=>{ UNLOCK=e.target.checked; try{localStorage.setItem("binaersudoku-unlock",UNLOCK?"1":"0")}catch(err){} if(S.view!=="play") show(S.view); };
 $("wipe").onclick=()=>{progress={};dailyDone={};save();show(S.view==="play"?"hub":S.view);};
 show("hub");
 
